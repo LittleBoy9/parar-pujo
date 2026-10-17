@@ -1,0 +1,128 @@
+---
+import { tithis } from '../data/site';
+import { bnDateRange, toBnDigits } from '../lib/bangla';
+
+const days = tithis.filter((t) => t.key !== 'mahalaya');
+---
+
+<section class="tithi" aria-labelledby="tithi-title">
+  <div class="wrap">
+    <h2 id="tithi-title" class="tithi__status" data-tithi-status>ষষ্ঠী থেকে দশমী</h2>
+    <ol class="tithi__days">
+      {
+        days.map((t, i) => (
+          <li class="tithi__day" data-first={t.dates[0]} data-last={t.dates[t.dates.length - 1]} style={`--tilt:${[-2, 1.5, -1, 2, -1.5][i]}deg`}>
+            <span class="tithi__name">{t.bn}</span>
+            <span class="tithi__date">{bnDateRange(t.dates)}</span>
+            <span class="en tithi__en">{t.en}</span>
+            <span class="tithi__today">আজ</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<script define:vars={{ days, first: days[0].dates[0], last: days[days.length - 1].dates.at(-1), digits: toBnDigits('0123456789') }}>
+  const bn = (n) => String(n).replace(/[0-9]/g, (d) => digits[d]);
+  // Today's date in India, whatever timezone the phone is in
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  const status = document.querySelector('[data-tithi-status]');
+  const day = days.find((d) => d.dates.includes(today));
+
+  document.querySelectorAll('[data-first]').forEach((el) => {
+    if (el.dataset.first <= today && today <= el.dataset.last) el.classList.add('is-today');
+    if (el.dataset.last < today) el.classList.add('is-past');
+  });
+
+  if (day) {
+    status.textContent = `আজ ${day.bn} — চলো ঠাকুর দেখতে!`;
+  } else if (today < first) {
+    const diff = Math.round((Date.parse(first) - Date.parse(today)) / 86400000);
+    status.textContent = `পুজো আসতে আর ${bn(diff)} দিন`;
+  } else if (today > last) {
+    status.textContent = 'আসছে বছর আবার হবে…';
+  }
+</script>
+
+<style>
+  .tithi {
+    padding-block: 40px 24px;
+  }
+
+  .tithi__status {
+    font-family: var(--font-sign);
+    font-size: clamp(1.8rem, 6vw, 2.8rem);
+    text-align: center;
+    color: var(--ink);
+  }
+
+  .tithi__days {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(104px, 1fr);
+    gap: 12px;
+    margin: 22px 0 0;
+    padding: 18px 4px 14px;
+    list-style: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  /* each day is a tear-off panjika (almanac) slip */
+  .tithi__day {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    padding: 14px 8px 12px;
+    background: var(--kash);
+    border: 2px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    transform: rotate(var(--tilt));
+    scroll-snap-align: center;
+    border-top: 3px dashed var(--ink);
+  }
+
+  .tithi__name {
+    font-family: var(--font-sign);
+    font-size: 1.7rem;
+    color: var(--sindoor);
+    line-height: 1.2;
+  }
+
+  .tithi__date {
+    font-weight: 600;
+  }
+
+  .tithi__en {
+    font-size: 0.8rem;
+  }
+
+  .tithi__today {
+    display: none;
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    translate: -50% 0;
+    padding: 0 10px;
+    background: var(--sindoor);
+    color: var(--kash);
+    font-weight: 600;
+    font-size: 0.8rem;
+    border-radius: 999px;
+    border: 2px solid var(--ink);
+  }
+
+  .tithi__day.is-today {
+    background: var(--haldi);
+    transform: rotate(0) scale(1.06);
+  }
+
+  .tithi__day.is-today .tithi__today {
+    display: block;
+  }
+
+  .tithi__day.is-past {
+    opacity: 0.55;
+  }
+</style>

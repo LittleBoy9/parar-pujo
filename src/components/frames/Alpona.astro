@@ -1,0 +1,105 @@
+---
+// Round alpona — the white rice-paste floor drawing — with the photo at its heart.
+import type { Pandal } from '../../data/pandals';
+import { palettes } from '../../data/palettes';
+import Photo from '../Photo.astro';
+
+interface Props {
+  pandal: Pandal;
+  seed?: number;
+  eager?: boolean;
+}
+
+const { pandal, seed = 0, eager } = Astro.props;
+const p = palettes[pandal.palette];
+const petals = Array.from({ length: 16 }, (_, i) => i * 22.5);
+const dots = Array.from({ length: 32 }, (_, i) => i * 11.25);
+const corners = [
+  [0, 0],
+  [400, 0],
+  [400, 400],
+  [0, 400],
+];
+---
+
+<div class="alpona">
+  <svg class="alpona__art" viewBox="0 0 400 400" aria-hidden="true">
+    <!-- corner curls (shankha-like spirals) -->
+    {
+      corners.map(([x, y], i) => (
+        <g transform={`translate(${x} ${y}) rotate(${i * 90})`} fill="none" stroke={p.bg} stroke-width="5" stroke-linecap="round">
+          <path d="M8,62 C8,24 24,8 62,8" />
+          <path d="M22,62 C22,36 36,22 52,24 C64,26 62,44 50,42 C42,40 44,32 50,32" />
+        </g>
+      ))
+    }
+
+    <g class="alpona__wheel">
+    <circle cx="200" cy="200" r="194" fill={p.bg} />
+    <circle cx="200" cy="200" r="186" fill="none" stroke={p.ink} stroke-width="3" />
+    <circle cx="200" cy="200" r="179" fill="none" stroke={p.ink} stroke-width="1.5" stroke-dasharray="3 6" />
+
+    <!-- lotus petals -->
+    {
+      petals.map((a) => (
+        <g transform={`rotate(${a} 200 200)`}>
+          <path d="M200,26 Q220,52 200,74 Q180,52 200,26 Z" fill={p.ink} />
+          <path d="M200,36 Q210,52 200,64 Q190,52 200,36 Z" fill={p.bg} />
+          <path d="M200,42 L200,60" stroke={p.accent} stroke-width="2" />
+        </g>
+      ))
+    }
+
+    <!-- dot ring between petals -->
+    {
+      dots.map((a) => (
+        <circle cx="200" cy="84" r={a % 22.5 === 0 ? 3 : 4.5} fill={p.ink} transform={`rotate(${a + 11.25} 200 200)`} />
+      ))
+    }
+
+    <circle cx="200" cy="200" r="128" fill={p.deep} stroke={p.ink} stroke-width="4" />
+    <circle cx="200" cy="200" r="122" fill="none" stroke={p.accent} stroke-width="2" />
+    </g>
+  </svg>
+
+  <div class="alpona__window">
+    <Photo pandal={pandal} seed={seed} eager={eager} />
+  </div>
+</div>
+
+<style>
+  .alpona {
+    position: relative;
+    aspect-ratio: 1;
+    width: 100%;
+  }
+
+  .alpona__art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .alpona__wheel {
+    transform-origin: 200px 200px;
+  }
+
+  /* circle r=118 at the centre */
+  .alpona__window {
+    position: absolute;
+    inset: 20.5%;
+    overflow: hidden;
+    border-radius: 50%;
+  }
+
+  .alpona:hover .alpona__wheel {
+    animation: spin 40s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>

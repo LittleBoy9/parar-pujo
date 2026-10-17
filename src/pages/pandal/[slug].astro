@@ -1,0 +1,303 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Frame from '../../components/Frame.astro';
+import VisitButton from '../../components/VisitButton.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
+import CrowdMeter from '../../components/CrowdMeter.astro';
+import StoryRing from '../../components/StoryRing.astro';
+import { pandals, type Pandal } from '../../data/pandals';
+import { palettes } from '../../data/palettes';
+import { toBnDigits } from '../../lib/bangla';
+import { site, tithis } from '../../data/site';
+
+export function getStaticPaths() {
+  return pandals.map((pandal, index) => ({ params: { slug: pandal.slug }, props: { pandal, index } }));
+}
+
+interface Props {
+  pandal: Pandal;
+  index: number;
+}
+
+const { pandal, index } = Astro.props;
+const p = palettes[pandal.palette];
+const prev = pandals[index - 1];
+const next = pandals[index + 1];
+const extraPhotos = pandal.photos.slice(1);
+// schema.org Event — helps searches like "ঘোষপুর দুর্গাপুজো" find this pandal
+const days = tithis.filter((t) => t.key !== 'mahalaya');
+const eventLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: `${pandal.nameBn} দুর্গাপুজো ${site.yearEn}`,
+  alternateName: `${pandal.nameEn} Durga Puja ${site.yearEn}`,
+  startDate: days[0].dates[0],
+  endDate: days[days.length - 1].dates.at(-1),
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  inLanguage: 'bn',
+  image: pandal.photos.map((p) => new URL(p, Astro.site).href),
+  description: `${pandal.nameBn}, ${pandal.areaBn}-এর দুর্গাপুজো।${pandal.themeBn ? ` থিম: ${pandal.themeBn}।` : ''}`,
+  url: new URL(`/pandal/${pandal.slug}`, Astro.site).href,
+  location: {
+    '@type': 'Place',
+    name: `${pandal.nameBn}, ${pandal.areaBn}`,
+    ...(pandal.mapUrl ? { hasMap: pandal.mapUrl } : {}),
+    address: { '@type': 'PostalAddress', addressLocality: pandal.areaBn, addressRegion: 'পশ্চিমবঙ্গ', addressCountry: 'IN' },
+  },
+};
+const shareText = `${pandal.nameBn} — পাড়ার পুজো ${pandal.themeBn ? `· থিম: ${pandal.themeBn}` : ''}`;
+---
+
+<Layout
+  title={`${pandal.nameBn} · ${pandal.areaBn}`}
+  description={`${pandal.nameBn}, ${pandal.areaBn} — দুর্গাপুজো ${site.yearBn}। ছবি, ম্যাপ, ভিড় কেমন, আর নিজের পোস্টার।${pandal.themeBn ? ` থিম: ${pandal.themeBn}।` : ''} ${pandal.nameEn} Durga Puja ${site.yearEn}.`}
+  og={`pandal-${pandal.slug}`}
+  ogAlt={`${pandal.nameBn} — ${pandal.areaBn}, দুর্গাপুজো`}
+  jsonLd={eventLd}
+>
+  <article class="pandal wrap" style={`--soft:${p.soft};--bg:${p.bg};--deep:${p.deep}`}>
+    <a class="pandal__back" href={`/para#${pandal.slug}`}>← পাড়ার সব ঠাকুর</a>
+
+    <div class="pandal__grid">
+      <div class="pandal__frame">
+        <Frame pandal={pandal} seed={index} eager />
+      </div>
+
+      <div class="pandal__info">
+        <p class="pandal__num">রুটে {toBnDigits(index + 1)} নম্বর</p>
+        {pandal.sample && <p class="pandal__sample">নমুনা — আসল তথ্য আসছে · sample entry</p>}
+        <h1 class="pandal__name">{pandal.nameBn}</h1>
+        <p class="pandal__area">📍 {pandal.areaBn}</p>
+        <p class="en">{pandal.nameEn}{pandal.since && ` · since ${pandal.since}`}</p>
+
+        {
+          pandal.themeBn && (
+            <div class="pandal__theme">
+              <span>এবারের থিম</span>
+              <strong>{pandal.themeBn}</strong>
+              {pandal.themeEn && <em class="en">{pandal.themeEn}</em>}
+            </div>
+          )
+        }
+
+        {pandal.storyBn && <p class="pandal__story">{pandal.storyBn}</p>}
+
+        {
+          pandal.timings && pandal.timings.length > 0 && (
+            <table class="pandal__timings">
+              <caption>সময়সূচি · Timings</caption>
+              <tbody>
+                {pandal.timings.map((t) => (
+                  <tr>
+                    <th scope="row">
+                      {t.bn} <span class="en">{t.en}</span>
+                    </th>
+                    <td>{t.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
+
+        <div class="pandal__actions">
+          <VisitButton slug={pandal.slug} />
+          <a class="btn btn--red" href={`/card?pandal=${pandal.slug}`}>পোস্টার বানান</a>
+          {
+            pandal.mapUrl && (
+              <a class="btn btn--yellow" href={pandal.mapUrl} target="_blank" rel="noopener">
+                📍 যাব কীভাবে?
+              </a>
+            )
+          }
+        </div>
+        <ShareButtons text={shareText} />
+        <CrowdMeter slug={pandal.slug} />
+      </div>
+    </div>
+
+    <div class="pandal__stories">
+      <StoryRing pandal={pandal.slug} />
+    </div>
+
+    {
+      extraPhotos.length > 0 && (
+        <section class="pandal__gallery" aria-label="আরও ছবি">
+          <h2 class="section-title">আরও ছবি</h2>
+          <div class="pandal__photos">
+            {extraPhotos.map((src, i) => (
+              <figure class="polaroid" style={`--r:${[-3, 2, -1.5, 3, -2][i % 5]}deg`}>
+                <img src={src} alt={`${pandal.nameBn} — ছবি ${toBnDigits(i + 2)}`} loading="lazy" />
+              </figure>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <nav class="pandal__route" aria-label="রুট">
+      {prev ? <a href={`/pandal/${prev.slug}`}>← {prev.nameBn}</a> : <span />}
+      {next ? <a href={`/pandal/${next.slug}`}>পরের ঠাকুর: {next.nameBn} →</a> : <a href="/passport">পাসপোর্ট দেখি →</a>}
+    </nav>
+  </article>
+</Layout>
+
+<script>
+  import { bindVisitButtons } from '../../scripts/passport';
+  bindVisitButtons();
+</script>
+
+<style>
+  .pandal {
+    padding-top: 24px;
+  }
+
+  .pandal__back {
+    font-weight: 600;
+  }
+
+  .pandal__grid {
+    display: grid;
+    gap: 40px;
+    align-items: center;
+    margin-top: 28px;
+  }
+
+  .pandal__frame {
+    width: 100%;
+    max-width: 460px;
+    margin-inline: auto;
+  }
+
+  .pandal__num {
+    margin: 0;
+    font-weight: 600;
+    color: var(--deep);
+  }
+
+  .pandal__sample {
+    display: inline-block;
+    margin: 6px 0 0;
+    padding: 0 8px;
+    border: 1.5px dashed var(--ink-soft);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .pandal__name {
+    margin-top: 6px;
+    font-family: var(--font-sign);
+    font-size: clamp(2.6rem, 9vw, 4rem);
+    color: var(--deep);
+  }
+
+  .pandal__area {
+    margin: 2px 0 0;
+    font-weight: 600;
+  }
+
+  .pandal__theme {
+    display: grid;
+    margin: 22px 0;
+    padding: 16px 20px;
+    background: var(--soft);
+    border-left: 6px solid var(--bg);
+    border-radius: 0 8px 8px 0;
+  }
+
+  .pandal__theme span {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .pandal__theme strong {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 1.6rem;
+  }
+
+  .pandal__story {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+  }
+
+  .pandal__timings {
+    width: 100%;
+    margin: 18px 0;
+    border-collapse: collapse;
+    font-family: var(--font-serif);
+  }
+
+  .pandal__timings caption {
+    text-align: left;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .pandal__timings th,
+  .pandal__timings td {
+    padding: 8px 4px;
+    border-bottom: 1.5px dotted var(--ink-soft);
+    text-align: left;
+    font-weight: 400;
+  }
+
+  .pandal__timings td {
+    text-align: right;
+  }
+
+  .pandal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 24px 0 18px;
+  }
+
+  .pandal__stories {
+    margin-top: 40px;
+  }
+
+  .pandal__gallery {
+    margin-top: 72px;
+  }
+
+  .pandal__photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+    gap: 28px;
+    margin-top: 28px;
+  }
+
+  .polaroid {
+    margin: 0;
+    padding: 10px 10px 36px;
+    background: #fffdf6;
+    box-shadow: 0 6px 16px rgb(43 26 16 / 0.18);
+    rotate: var(--r);
+  }
+
+  .polaroid img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  .pandal__route {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 2px dashed var(--ink-soft);
+    font-weight: 600;
+  }
+
+  @media (min-width: 860px) {
+    .pandal__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

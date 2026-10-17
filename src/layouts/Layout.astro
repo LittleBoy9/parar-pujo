@@ -1,0 +1,313 @@
+---
+import '../styles/global.css';
+import { creator, site } from '../data/site';
+import SiteStats from '../components/SiteStats.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** which share image to use (a key in og-manifest.json, made by scripts/og.mjs) */
+  og?: string;
+  ogAlt?: string;
+  noindex?: boolean;
+  /** extra schema.org data for this page (e.g. a pandal's Event) */
+  jsonLd?: Record<string, unknown>;
+}
+
+const {
+  title,
+  description = 'নিজের পুজোর পোস্টার বানান — সেলফি, প্যান্ডেলের ছবি, বাংলা লেখা, ১৫টা ডিজাইন। Make your own Durga Puja poster for stories, status and posts.',
+  og = 'home',
+  ogAlt = 'পাড়ার পুজো — নিজের পুজোর পোস্টার বানান',
+  noindex = false,
+  jsonLd,
+} = Astro.props;
+
+// Share images are generated before each build; fall back gracefully if they haven't been yet.
+const manifests = import.meta.glob<{ default: Record<string, string> }>('../data/og-manifest.json', { eager: true });
+const ogManifest = Object.values(manifests)[0]?.default ?? {};
+const ogPath = ogManifest[og] ?? ogManifest.home;
+const fullTitle = title ? `${title} · ${site.titleBn}` : `${site.titleBn} · নিজের পুজোর পোস্টার বানান`;
+// clean URLs for share previews: /pandal/x, not /pandal/x.html
+const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/');
+const canonical = new URL(cleanPath, Astro.site);
+const ogImage = ogPath ? new URL(ogPath, Astro.site).href : undefined;
+
+// Who made the site and what it is — on every page, for search engines.
+const siteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: site.titleBn,
+  alternateName: site.titleEn,
+  url: new URL('/', Astro.site).href,
+  inLanguage: 'bn',
+  description: 'নিজের দুর্গাপুজোর পোস্টার বানান, পাড়ার পুজোর স্টোরি দেখুন আর নিজের পাড়ার পুজো যোগ করুন।',
+  creator: {
+    '@type': 'Person',
+    name: creator.nameEn,
+    alternateName: creator.nameBn,
+    url: creator.website,
+    image: new URL(creator.photo, Astro.site).href,
+    sameAs: [creator.instagramUrl, creator.website],
+  },
+};
+const path = Astro.url.pathname;
+const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean }[] = [
+  { href: '/#pujas', bn: 'পুজো', en: 'Pujas' },
+  { href: '/story', bn: 'স্টোরি', en: 'Stories' },
+  { href: '/card', bn: 'পোস্টার ✨', en: 'Make a poster', hot: true },
+];
+---
+
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#b3261e" />
+    <meta name="author" content={`${creator.nameEn} (${creator.websiteLabel})`} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <!-- share previews: WhatsApp, Facebook, Instagram, LinkedIn, Telegram, X -->
+    <meta property="og:site_name" content={site.titleBn} />
+    <meta property="og:locale" content="bn_IN" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {
+      ogImage && (
+        <>
+          <meta property="og:image" content={ogImage} />
+          <meta property="og:image:secure_url" content={ogImage} />
+          <meta property="og:image:type" content="image/jpeg" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={ogAlt} />
+        </>
+      )
+    }
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+    {ogImage && <meta name="twitter:image:alt" content={ogAlt} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify(siteLd)} />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar__inner">
+        <a href="/" class="topbar__logo" aria-label={site.titleEn}>{site.titleBn}</a>
+        <nav aria-label="Main">
+          <ul>
+            {
+              nav.map((n) => (
+                <li class={n.wide ? 'nav__wide' : undefined}>
+                  <a href={n.href} class={n.hot ? 'nav__hot' : undefined} aria-current={path === n.href ? 'page' : undefined}>
+                    {n.bn}
+                    <span class="visually-hidden"> ({n.en})</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <div class="lalpaar" aria-hidden="true"></div>
+      <div class="wrap footer__inner">
+        <div class="footer__maker">
+          <img src={creator.photoSm} alt={creator.nameEn} width="120" height="120" loading="lazy" />
+          <div>
+            <p class="footer__made">বানিয়েছেন <a href="/#creator">{creator.nameBn}</a> · <span class="en">made by {creator.nameEn}</span></p>
+            <p class="footer__links">
+              <a href={creator.instagramUrl} target="_blank" rel="noopener">📸 @{creator.instagram}</a>
+              <a href={creator.website} target="_blank" rel="noopener">🌐 {creator.websiteLabel}</a>
+            </p>
+          </div>
+        </div>
+        <p class="footer__line">আসছে বছর আবার হবে</p>
+        <p class="en">See you next year</p>
+        <p class="footer__small">পাড়ার লোকেদের ভালোবাসায় বানানো · made with love by the para</p>
+        <p class="footer__credit">
+          ঢাকের শব্দ: MythologyChallengerYT,{' '}
+          <a href="https://pixabay.com/sound-effects/musical-durga-puja-dhak-sound-9330/" target="_blank" rel="noopener">Pixabay</a>
+        </p>
+      </div>
+    </footer>
+    <SiteStats />
+
+  </body>
+</html>
+
+<style>
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--paper);
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .topbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 54px;
+  }
+
+  .topbar__logo {
+    font-family: var(--font-sign);
+    font-size: 1.6rem;
+    color: var(--sindoor);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  nav ul {
+    display: flex;
+    gap: clamp(10px, 3vw, 26px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+    padding-block: 4px;
+    border-bottom: 2px solid transparent;
+  }
+
+  nav a:hover,
+  nav a[aria-current='page'] {
+    border-color: var(--sindoor);
+    color: var(--sindoor);
+  }
+
+  /* the poster maker is the thing to try — make it stand out */
+  nav .nav__hot {
+    padding: 3px 10px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--sindoor);
+    color: var(--kash);
+  }
+
+  nav .nav__hot:hover,
+  nav .nav__hot[aria-current='page'] {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .footer {
+    margin-top: 80px;
+    background: var(--kash);
+  }
+
+  .footer__inner {
+    padding-block: 48px 120px;
+    text-align: center;
+  }
+
+  .footer__maker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    max-width: 520px;
+    margin: 0 auto 28px;
+    padding: 12px 18px;
+    border: 2px solid var(--ink);
+    border-radius: 16px;
+    background: var(--paper);
+    box-shadow: 3px 3px 0 var(--ink);
+    text-align: left;
+  }
+
+  .footer__maker img {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: 50%;
+    border: 3px solid var(--haldi);
+    object-fit: cover;
+  }
+
+  .footer__made {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .footer__made a {
+    color: var(--sindoor);
+    text-decoration: none;
+  }
+
+  .footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 4px 0 0;
+    font-size: 0.92rem;
+  }
+
+  .footer__links a {
+    font-weight: 600;
+  }
+
+  .footer__line {
+    margin: 0;
+    font-family: var(--font-sign);
+    font-size: clamp(2rem, 8vw, 3.4rem);
+    color: var(--sindoor);
+  }
+
+  .footer__small {
+    margin-top: 24px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .footer__credit {
+    margin: 6px 0 0;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 400px) {
+    .nav__wide {
+      display: none;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .topbar__logo {
+      font-size: 1.3rem;
+    }
+    nav a {
+      font-size: 0.85rem;
+    }
+  }
+</style>

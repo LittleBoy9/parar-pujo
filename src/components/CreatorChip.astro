@@ -1,0 +1,43 @@
+---
+// Small "বানিয়েছেন সৌনক দাস" chip with face — links to the creator card / Instagram.
+import { creator } from '../data/site';
+
+interface Props {
+  href?: string;
+}
+
+const { href = '/#creator' } = Astro.props;
+---
+
+<a class="chip-by" href={href}>
+  <img src={creator.photoSm} alt="" width="120" height="120" />
+  <span>বানিয়েছেন <b>{creator.nameBn}</b></span>
+</a>
+
+<style>
+  .chip-by {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 14px 3px 3px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--kash);
+    color: var(--ink);
+    font-size: 0.9rem;
+    text-decoration: none;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .chip-by img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--haldi);
+    object-fit: cover;
+  }
+
+  .chip-by b {
+    color: var(--sindoor);
+  }
+</style>

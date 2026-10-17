@@ -1,0 +1,40 @@
+---
+// Counts this visit (at most once a day per browser, or every load where the numbers are shown),
+// and fills any [data-stats] strip on the page. Numbers stay hidden until they're worth showing.
+---
+
+<script>
+  import { toBnDigits } from '../lib/bangla';
+
+  const SHOW_FROM = 50; // below this a number looks sad, so it simply isn't shown
+  const DAY_KEY = 'parar-pujo:visit-day';
+  const strip = document.querySelector<HTMLElement>('[data-stats]');
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  let counted: string | null = null;
+  try {
+    counted = localStorage.getItem(DAY_KEY);
+  } catch {
+    // storage blocked — the server de-duplicates anyway
+  }
+
+  if (strip || counted !== today) {
+    fetch('/api/visit', { method: 'POST' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((c: { visits: number; posters: number } | null) => {
+        try {
+          localStorage.setItem(DAY_KEY, today);
+        } catch {
+          // fine
+        }
+        if (!strip || !c) return;
+        const fmt = (n: number) => toBnDigits(n.toLocaleString('en-IN'));
+        const parts: string[] = [];
+        if (c.visits >= SHOW_FROM) parts.push(`👀 ${fmt(c.visits)} বার দেখা হয়েছে`);
+        if (c.posters >= SHOW_FROM) parts.push(`🎨 ${fmt(c.posters)}টা পোস্টার বানানো হয়েছে`);
+        if (!parts.length) return;
+        strip.textContent = parts.join('  ·  ');
+        strip.hidden = false;
+      })
+      .catch(() => {});
+  }
+</script>

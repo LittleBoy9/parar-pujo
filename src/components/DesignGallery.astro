@@ -1,0 +1,147 @@
+---
+// All poster designs in a swipeable row, drawn live with a real pandal photo.
+// Tapping one opens the poster maker with that design already chosen.
+import { pandals } from '../data/pandals';
+import { palettes } from '../data/palettes';
+import { site, tithis } from '../data/site';
+
+const withPhotos = pandals.filter((p) => p.photos.length);
+const samples = withPhotos.slice(0, 2).map((p) => ({
+  nameBn: p.nameBn,
+  areaBn: p.areaBn,
+  photo: p.photos[0],
+  fy: p.focus ? parseFloat(p.focus.split(' ')[1]) / 100 : 0.5,
+  palette: palettes[p.palette],
+}));
+const cfg = { samples, tithis, yearBn: site.yearBn };
+---
+
+<section class="gallery" aria-labelledby="gallery-title">
+  <div class="wrap gallery__head">
+    <h2 id="gallery-title" class="gallery__title">১৫টা ডিজাইন, বেছে নিন</h2>
+    <a class="gallery__all" href="/card">সব দেখুন →</a>
+  </div>
+  <div class="gallery__row" data-gallery={JSON.stringify(cfg)}></div>
+</section>
+
+<script>
+  import { loadFonts, loadImage, photoInput, type CardPalette, type Img } from '../scripts/card/kit';
+  import { TEMPLATES, drawCard } from '../scripts/card/templates';
+  import { pujaToday } from '../scripts/card/greeting';
+
+  interface Sample {
+    nameBn: string;
+    areaBn: string;
+    photo: string;
+    fy: number;
+    palette: CardPalette;
+  }
+
+  const row = document.querySelector<HTMLElement>('[data-gallery]');
+  if (row) {
+    // build the links now (cheap); draw the posters only when the row scrolls near
+    const links = TEMPLATES.map((t) => {
+      const a = document.createElement('a');
+      a.className = 'gtile';
+      a.href = `/card?t=${t.id}`;
+      const c = document.createElement('canvas');
+      c.width = 216;
+      c.height = 384;
+      const label = document.createElement('span');
+      label.textContent = t.bn;
+      a.append(c, label);
+      row.append(a);
+      return { t, c };
+    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        void draw(row, links);
+      },
+      { rootMargin: '400px' },
+    );
+    io.observe(row);
+  }
+
+  async function draw(row: HTMLElement, links: { t: (typeof TEMPLATES)[number]; c: HTMLCanvasElement }[]) {
+    const cfg = JSON.parse(row.dataset.gallery!) as { samples: Sample[]; tithis: { key: string; dates: string[] }[]; yearBn: string };
+    if (!cfg.samples.length) return;
+    await loadFonts();
+    const imgs: Img[] = await Promise.all(cfg.samples.map((s) => loadImage(s.photo)));
+    const { greeting } = pujaToday(cfg.tithis);
+    links.forEach(({ t, c }, i) => {
+      const k = i % cfg.samples.length;
+      const s = cfg.samples[k];
+      const photos = [0, 1, 2, 3].map((j) => photoInput(imgs[(k + j) % imgs.length], 0.5, cfg.samples[(k + j) % imgs.length].fy));
+      drawCard(c, t, 1920, { pujaBn: s.nameBn, areaBn: s.areaBn, greeting, line: '', from: '', to: '', photos, palette: s.palette, site: location.host, yearBn: cfg.yearBn }, 0.2);
+    });
+  }
+</script>
+
+<style>
+  .gallery {
+    padding-block: 36px 8px;
+  }
+
+  .gallery__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .gallery__title {
+    font-family: var(--font-sign);
+    font-size: clamp(1.8rem, 6vw, 2.4rem);
+    color: var(--sindoor);
+  }
+
+  .gallery__all {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* a swipeable shelf, edge to edge on phones */
+  .gallery__row {
+    display: flex;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 6px max(var(--gutter), calc((100vw - var(--max)) / 2 + var(--gutter))) 16px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    /* snapping lines tiles up with the page margin, not the screen edge */
+    scroll-padding-inline: max(var(--gutter), calc((100vw - var(--max)) / 2 + var(--gutter)));
+    scrollbar-width: none;
+  }
+
+  .gallery__row :global(.gtile) {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    flex: none;
+    width: 132px;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
+    text-decoration: none;
+    scroll-snap-align: start;
+  }
+
+  .gallery__row :global(.gtile canvas) {
+    display: block;
+    width: 132px;
+    height: auto;
+    aspect-ratio: 9 / 16;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    background: var(--paper-deep);
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.2s;
+  }
+
+  .gallery__row :global(.gtile:hover canvas) {
+    transform: translateY(-4px) rotate(-1.5deg);
+  }
+</style>

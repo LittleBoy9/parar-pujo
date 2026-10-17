@@ -1,0 +1,302 @@
+---
+// "পাড়ায় পাড়ায় পুজো" — every puja on the site in one list: the ones we list ourselves
+// (rendered here) plus visitor-submitted ones (fetched and drawn into the same card style).
+// Submitted pujas reuse the illustrated frames via <template>s rendered once at build time.
+import Frame from './Frame.astro';
+import { pandals, type FrameStyle, type Pandal } from '../data/pandals';
+import type { PaletteName } from '../data/palettes';
+
+const listed = pandals.filter((p) => !p.sample);
+
+// Rotation so neighbouring submitted pujas never share a look
+const looks: [FrameStyle, PaletteName][] = [
+  ['stamp', 'kolapata'],
+  ['pujabarshiki', 'shiuli'],
+  ['alpona', 'neel'],
+  ['chalchitra', 'ganga'],
+  ['marquee', 'sindoor'],
+  ['terracotta', 'haldi'],
+  ['ghat', 'terracotta'],
+];
+const templates = looks.map(([frame, palette], i) => ({
+  frame,
+  pandal: { slug: `tpl-${frame}`, nameBn: '__NAME__', nameEn: '', areaBn: '', photos: ['/__PHOTO__.jpg'], frame, palette } satisfies Pandal,
+  seed: i + 10,
+}));
+const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
+---
+
+<section id="pujas" class="dir wrap" aria-labelledby="dir-title">
+  <h2 id="dir-title" class="section-title">পাড়ায় পাড়ায় পুজো</h2>
+  <p class="section-sub">
+    সবার পাড়ার ঠাকুর, এক জায়গায় <span class="en">· every para's puja, in one place</span>
+  </p>
+
+  <div class="dir__filters" data-dir-filters role="group" aria-label="এলাকা বাছুন" hidden></div>
+
+  <ul class="dir__grid" data-dir-grid>
+    {
+      listed.map((p, i) => (
+        <li class="cp" id={p.slug} data-area={p.areaBn} style={`--tilt:${tilts[i % tilts.length]}deg`}>
+          <a class="cp__frame" href={`/pandal/${p.slug}`} aria-label={`${p.nameBn} — বিস্তারিত`}>
+            <Frame pandal={p} seed={i} />
+          </a>
+          <h3 class="cp__name">{p.nameBn}</h3>
+          <p class="cp__meta">{[p.areaBn, p.themeBn && `থিম: ${p.themeBn}`].filter(Boolean).join(' · ')}</p>
+          <div class="cp__actions">
+            <a class="btn" href={`/pandal/${p.slug}`}>বিস্তারিত</a>
+            <a class="btn btn--red" href={`/card?pandal=${p.slug}`}>পোস্টার বানান</a>
+          </div>
+        </li>
+      ))
+    }
+    <!-- always last: more to come, and the way in for everyone else's puja -->
+    <li class="cp cp--soon" data-soon>
+      <a class="soon" href="/add">
+        <span class="soon__dhak" aria-hidden="true">🪔</span>
+        <b class="soon__title">আরও পুজো আসছে…</b>
+        <span class="soon__text">পাড়ায় পাড়ায় ঠাকুর যোগ হচ্ছে। আপনার পাড়ার পুজোটা নেই? নাম আর একটা ছবি পাঠান।</span>
+        <span class="en soon__en">More pujas coming soon — add yours</span>
+        <span class="btn btn--red soon__btn">+ আপনার পাড়ার পুজো যোগ করুন</span>
+      </a>
+    </li>
+  </ul>
+
+  {
+    templates.map((t) => (
+      <template data-look={t.frame}>
+        <Frame pandal={t.pandal} seed={t.seed} />
+      </template>
+    ))
+  }
+</section>
+
+<script>
+  import { getPujas } from '../scripts/api';
+
+  const grid = document.querySelector<HTMLUListElement>('[data-dir-grid]');
+  if (grid) void init(grid);
+
+  async function init(grid: HTMLUListElement) {
+    const pujas = (await getPujas()) ?? [];
+    const looks = [...document.querySelectorAll<HTMLTemplateElement>('template[data-look]')];
+    const soon = grid.querySelector<HTMLElement>('[data-soon]');
+    const offset = grid.children.length;
+
+    pujas.forEach((p, i) => {
+      const frame = looks[i % looks.length].content.cloneNode(true) as DocumentFragment;
+      frame.querySelectorAll('img').forEach((img) => {
+        img.src = p.url;
+        img.alt = `${p.nameBn} — ${p.areaBn}`;
+      });
+      // swap the placeholder name wherever the frame prints it
+      const walker = document.createTreeWalker(frame, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (n.nodeValue?.includes('__NAME__')) n.nodeValue = n.nodeValue.replaceAll('__NAME__', p.nameBn);
+      }
+
+      const li = document.createElement('li');
+      li.className = 'cp';
+      li.id = `puja-${p.id}`;
+      li.dataset.area = p.areaBn;
+      li.style.setProperty('--tilt', `${[-1.5, 1.2, -0.6, 1.8, -1][(offset + i) % 5]}deg`);
+      const art = document.createElement('div');
+      art.className = 'cp__frame';
+      art.append(frame);
+      const name = document.createElement('h3');
+      name.className = 'cp__name';
+      name.textContent = p.nameBn;
+      const meta = document.createElement('p');
+      meta.className = 'cp__meta';
+      meta.textContent = [p.areaBn, p.themeBn && `থিম: ${p.themeBn}`].filter(Boolean).join(' · ');
+
+      const actions = document.createElement('div');
+      actions.className = 'cp__actions';
+      if (p.mapUrl) {
+        const map = document.createElement('a');
+        map.className = 'btn';
+        map.href = p.mapUrl;
+        map.target = '_blank';
+        map.rel = 'noopener';
+        map.textContent = 'ম্যাপ';
+        actions.append(map);
+      }
+      const card = document.createElement('a');
+      card.className = 'btn btn--red';
+      card.href = `/card?puja=${encodeURIComponent(p.id)}`;
+      card.textContent = 'পোস্টার বানান';
+      actions.append(card);
+
+      li.append(art, name, meta, actions);
+      grid.insertBefore(li, soon); // submitted pujas line up before the "more coming" card
+    });
+
+    buildFilters(grid);
+    // a link like /#puja-<id> (e.g. from a story) can only land once the card exists
+    if (location.hash.startsWith('#puja-')) document.querySelector(location.hash)?.scrollIntoView();
+  }
+
+  /** "সব · ঘোষপুর · বেহালা …" — shown once there's more than one area. */
+  function buildFilters(grid: HTMLUListElement) {
+    const box = document.querySelector<HTMLElement>('[data-dir-filters]')!;
+    const cards = [...grid.querySelectorAll<HTMLElement>('.cp:not([data-soon])')];
+    const soon = grid.querySelector<HTMLElement>('[data-soon]');
+    const counts = new Map<string, number>();
+    cards.forEach((c) => counts.set(c.dataset.area!, (counts.get(c.dataset.area!) ?? 0) + 1));
+    if (counts.size < 2) return;
+
+    const chip = (label: string, area: string | null) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'dir__chip';
+      b.textContent = label;
+      b.setAttribute('aria-pressed', String(area === null));
+      b.addEventListener('click', () => {
+        box.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        cards.forEach((c) => (c.hidden = area !== null && c.dataset.area !== area));
+        if (soon) soon.hidden = area !== null;
+      });
+      return b;
+    };
+    box.append(chip(`সব (${cards.length})`, null), ...[...counts].sort((a, b) => b[1] - a[1]).map(([area, n]) => chip(`${area} (${n})`, area)));
+    box.hidden = false;
+  }
+</script>
+
+<style>
+  .dir {
+    padding-block: 64px 24px;
+  }
+
+  .dir__filters {
+    display: flex;
+    gap: 8px;
+    margin-top: 22px;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .dir__filters :global(.dir__chip) {
+    flex: none;
+    padding: 0.35em 0.95em;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--kash);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .dir__filters :global(.dir__chip[aria-pressed='true']) {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .dir__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 52px 32px;
+    margin: 34px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dir__grid :global(.cp) {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    text-align: center;
+  }
+
+  .dir__grid :global(.cp__frame) {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    color: inherit;
+    text-decoration: none;
+    transform: rotate(var(--tilt));
+    transition: transform 0.25s;
+  }
+
+  .dir__grid :global(.cp__frame:hover) {
+    transform: rotate(0) scale(1.02);
+  }
+
+  .dir__grid :global(.cp__name) {
+    margin-top: 20px;
+    font-family: var(--font-sign);
+    font-size: 1.9rem;
+    color: var(--sindoor);
+  }
+
+  .dir__grid :global(.cp__meta) {
+    margin: 4px 0 0;
+    font-family: var(--font-serif);
+  }
+
+  .dir__grid :global(.cp__actions) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  /* "আরও পুজো আসছে…" — an empty frame waiting for the next para */
+  .soon {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 4 / 5;
+    padding: 24px 20px;
+    border: 3px dashed var(--ink);
+    border-radius: 18px;
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 14px, rgb(239 177 40 / 0.12) 14px 28px),
+      var(--kash);
+    color: var(--ink);
+    text-align: center;
+    text-decoration: none;
+    rotate: 1deg;
+    transition: rotate 0.2s;
+  }
+
+  .soon:hover {
+    rotate: 0deg;
+  }
+
+  .soon__dhak {
+    font-size: 2.6rem;
+    animation: glow 2.4s ease-in-out infinite;
+  }
+
+  @keyframes glow {
+    50% {
+      transform: scale(1.12);
+      filter: drop-shadow(0 0 10px rgb(255 190 80 / 0.9));
+    }
+  }
+
+  .soon__title {
+    font-family: var(--font-sign);
+    font-weight: 400;
+    font-size: 2rem;
+    color: var(--sindoor);
+  }
+
+  .soon__text {
+    font-family: var(--font-serif);
+  }
+
+  .soon__en {
+    font-size: 0.85rem;
+  }
+
+  .soon__btn {
+    margin-top: 6px;
+    font-size: 0.95rem;
+  }
+</style>

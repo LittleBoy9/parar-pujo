@@ -1,0 +1,440 @@
+---
+// "পাড়ার স্টোরি" — live, approved visitor photos, one bubble per pandal, gone after 24h.
+// Pass `pandal` to show only that pandal's stories (used on pandal pages).
+import { pandals } from '../data/pandals';
+import { palettes } from '../data/palettes';
+
+interface Props {
+  pandal?: string;
+}
+
+const { pandal } = Astro.props;
+const meta = pandals
+  .filter((p) => !pandal || p.slug === pandal)
+  .map((p) => ({ slug: p.slug, nameBn: p.nameBn, color: palettes[p.palette].bg, href: `/pandal/${p.slug}` }));
+const withCommunity = !pandal; // the home ring also shows visitor-submitted pujas
+const addHref = pandal ? `/story?pandal=${pandal}` : '/story';
+---
+
+<section class="stories" data-stories={JSON.stringify(meta)} data-community={withCommunity ? '1' : undefined} aria-labelledby="stories-title">
+  <div class="stories__head">
+    <h2 id="stories-title" class="stories__title"><span class="stories__live" aria-hidden="true"></span>পাড়ার স্টোরি</h2>
+    <span class="en stories__sub">live from the pandals · disappears in 24h</span>
+  </div>
+
+  <ul class="stories__row" data-story-row>
+    <li>
+      <a class="bubble bubble--add" href={addHref}>
+        <span class="bubble__ring"><span class="bubble__plus" aria-hidden="true">+</span></span>
+        <span class="bubble__name">সেলফি দিন</span>
+      </a>
+    </li>
+  </ul>
+  <p class="stories__empty" data-story-empty hidden>
+    এখনও কেউ ছবি দেয়নি — <a href={addHref}>প্রথম সেলফিটা আপনিই দিন!</a>
+  </p>
+</section>
+
+<dialog class="viewer" data-viewer aria-label="স্টোরি">
+  <div class="viewer__bars" data-bars></div>
+  <header class="viewer__head">
+    <span class="viewer__dot" data-v-dot></span>
+    <div>
+      <a class="viewer__pandal" data-v-pandal></a>
+      <span class="viewer__meta" data-v-meta></span>
+    </div>
+    <button class="viewer__icon" type="button" data-v-report aria-label="রিপোর্ট করুন">⚑</button>
+    <button class="viewer__icon" type="button" data-v-close aria-label="বন্ধ করুন">✕</button>
+  </header>
+  <div class="viewer__stage" data-v-stage>
+    <img class="viewer__img" data-v-img alt="" />
+  </div>
+  <p class="viewer__caption" data-v-caption></p>
+  <p class="viewer__toast" data-v-toast hidden></p>
+</dialog>
+
+<script>
+  import { COMMUNITY_COLORS, getPujas, getStories } from '../scripts/api';
+  import { StoryViewer, type StoryGroup } from '../scripts/story-viewer';
+
+  interface Meta {
+    slug: string;
+    nameBn: string;
+    color: string;
+    href: string;
+  }
+
+  const SEEN_KEY = 'parar-pujo:seen-stories:v1';
+  const readSeen = (): Set<string> => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]'));
+    } catch {
+      return new Set();
+    }
+  };
+
+  const section = document.querySelector<HTMLElement>('[data-stories]');
+  if (section) void init(section);
+
+  async function init(section: HTMLElement) {
+    const meta: Meta[] = JSON.parse(section.dataset.stories!);
+    const [stories, pujas] = await Promise.all([getStories(), section.dataset.community ? getPujas() : Promise.resolve(null)]);
+    (pujas ?? []).forEach((p, i) => meta.push({ slug: p.id, nameBn: p.nameBn, color: COMMUNITY_COLORS[i % COMMUNITY_COLORS.length], href: `/#puja-${p.id}` }));
+    // pujas people typed in themselves ("অন্য পুজো") get a bubble each, by name + place
+    const typed = new Map<string, { name: string; area: string }>();
+    for (const s of stories ?? []) {
+      if (s.pandal !== 'other' || !s.pujaName) continue;
+      const key = `other:${s.pujaName}|${s.pujaArea ?? ''}`;
+      typed.set(key, { name: s.pujaName, area: s.pujaArea ?? '' });
+      (s as { pandal: string }).pandal = key;
+    }
+    if (section.dataset.community) {
+      [...typed].forEach(([key, t], i) =>
+        meta.push({ slug: key, nameBn: t.area ? `${t.name} · ${t.area}` : t.name, color: COMMUNITY_COLORS[(i + 3) % COMMUNITY_COLORS.length], href: '/#pujas' }),
+      );
+    }
+    if (!stories) {
+      section.hidden = true; // API unreachable — nothing to show or upload to
+      return;
+    }
+    const latest = (g: StoryGroup) => Math.max(...g.stories.map((s) => s.postedAt));
+    const groups: StoryGroup[] = meta
+      .map((m) => ({ ...m, stories: stories.filter((s) => s.pandal === m.slug) }))
+      .filter((g) => g.stories.length > 0)
+      .sort((a, b) => latest(b) - latest(a)); // pujas with the newest stories first
+
+    if (!groups.length) {
+      section.querySelector<HTMLElement>('[data-story-empty]')!.hidden = false;
+      return;
+    }
+
+    const row = section.querySelector<HTMLUListElement>('[data-story-row]')!;
+    const viewer = new StoryViewer(document.querySelector<HTMLDialogElement>('[data-viewer]')!, {
+      onSeen: (id) => {
+        const seen = readSeen();
+        seen.add(id);
+        try {
+          localStorage.setItem(SEEN_KEY, JSON.stringify([...seen].slice(-500)));
+        } catch {
+          // storage unavailable — rings just won't remember
+        }
+        paintSeen();
+      },
+    });
+
+    const bubbles = groups.map((g, gi) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bubble';
+      btn.style.setProperty('--c', g.color);
+      const ring = document.createElement('span');
+      ring.className = 'bubble__ring';
+      const img = document.createElement('img');
+      img.src = g.stories[g.stories.length - 1].url;
+      img.alt = '';
+      img.loading = 'lazy';
+      ring.append(img);
+      const name = document.createElement('span');
+      name.className = 'bubble__name';
+      name.textContent = g.nameBn;
+      const count = document.createElement('span');
+      count.className = 'bubble__count';
+      count.textContent = String(g.stories.length);
+      btn.append(ring, name, count);
+      btn.addEventListener('click', () => viewer.open(groups, gi));
+      li.append(btn);
+      row.append(li);
+      return { btn, g };
+    });
+
+    function paintSeen() {
+      const seen = readSeen();
+      bubbles.forEach(({ btn, g }) => btn.classList.toggle('is-seen', g.stories.every((s) => seen.has(s.id))));
+    }
+    paintSeen();
+  }
+</script>
+
+<style>
+  .stories {
+    padding-block: 18px 6px;
+  }
+
+  .stories__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+  }
+
+  .stories__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sign);
+    font-size: 1.7rem;
+    color: var(--sindoor);
+  }
+
+  .stories__live {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #e3342f;
+    box-shadow: 0 0 0 0 rgb(227 52 47 / 0.6);
+    animation: pulse 1.8s infinite;
+  }
+
+  @keyframes pulse {
+    70% {
+      box-shadow: 0 0 0 10px rgb(227 52 47 / 0);
+    }
+  }
+
+  .stories__sub {
+    font-size: 0.85rem;
+  }
+
+  .stories__row {
+    display: flex;
+    gap: 14px;
+    margin: 12px 0 0;
+    padding: 4px 2px 10px;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .stories__empty {
+    margin: 4px 0 0;
+    font-family: var(--font-serif);
+  }
+
+  .stories :global(.bubble) {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    width: 84px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  /* ring painted like a marigold garland in the pandal's colour */
+  .stories :global(.bubble__ring) {
+    display: block; /* fixed box, so the photo's 100% height resolves to a circle */
+    width: 76px;
+    height: 76px;
+    overflow: hidden;
+    padding: 4px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(var(--c, var(--sindoor)) 0 12deg, var(--haldi) 12deg 24deg);
+  }
+
+  .stories :global(.bubble__ring img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid var(--paper);
+    object-fit: cover;
+  }
+
+  .stories :global(.bubble.is-seen .bubble__ring) {
+    background: #c9bba5;
+  }
+
+  .stories :global(.bubble__name) {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .stories :global(.bubble__count) {
+    position: absolute;
+    top: 0;
+    right: 2px;
+    min-width: 22px;
+    padding: 0 6px;
+    border: 2px solid var(--paper);
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--kash);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .bubble--add .bubble__ring {
+    background: none;
+    border: 2.5px dashed var(--ink);
+  }
+
+  .bubble__plus {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--haldi);
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* ---------- full-screen viewer ---------- */
+  .viewer {
+    width: 100%;
+    max-width: 480px;
+    height: 100%;
+    max-height: 100%;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: #111;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .viewer[open] {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+  }
+
+  .viewer.viewer--fallback {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+  }
+
+  .viewer::backdrop {
+    background: rgb(0 0 0 / 0.92);
+  }
+
+  .viewer__bars {
+    display: flex;
+    gap: 4px;
+    padding: 10px 10px 0;
+  }
+
+  .viewer__bars :global(span) {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.3);
+    overflow: hidden;
+  }
+
+  .viewer__bars :global(span i) {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: #fff;
+  }
+
+  .viewer__bars :global(span.done i) {
+    width: 100%;
+  }
+
+  .viewer__bars :global(span.now i) {
+    animation: fill var(--dur, 5s) linear forwards;
+  }
+
+  .viewer.is-paused .viewer__bars :global(span.now i) {
+    animation-play-state: paused;
+  }
+
+  @keyframes fill {
+    to {
+      width: 100%;
+    }
+  }
+
+  .viewer__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .viewer__head > div {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+  }
+
+  .viewer__dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+
+  .viewer__pandal {
+    font-family: var(--font-sign);
+    font-size: 1.15rem;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .viewer__meta {
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+
+  .viewer__icon {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.12);
+    color: #fff;
+    font-size: 1.1rem;
+  }
+
+  .viewer__stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .viewer__img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    -webkit-user-drag: none;
+  }
+
+  .viewer__caption {
+    margin: 0;
+    padding: 12px 16px calc(18px + env(safe-area-inset-bottom));
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    text-align: center;
+    min-height: 1.5em;
+  }
+
+  .viewer__toast {
+    position: absolute;
+    left: 50%;
+    bottom: 80px;
+    translate: -50% 0;
+    margin: 0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #fff;
+    color: #111;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

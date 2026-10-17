@@ -1,0 +1,154 @@
+---
+// The cover of an old Sharadiya / Pujabarshiki annual — the one you waited all year for.
+import type { Pandal } from '../../data/pandals';
+import { palettes } from '../../data/palettes';
+import { site } from '../../data/site';
+import Photo from '../Photo.astro';
+
+interface Props {
+  pandal: Pandal;
+  seed?: number;
+  eager?: boolean;
+}
+
+const { pandal, seed = 0, eager } = Astro.props;
+const p = palettes[pandal.palette];
+---
+
+<div class="cover" style={`--bg:${p.bg};--ink:${p.ink};--accent:${p.accent};--deep:${p.deep};--soft:${p.soft}`}>
+  <header class="cover__mast">
+    <span class="cover__kicker">পাড়ার পুজো · বিশেষ সংখ্যা</span>
+    <span class="cover__title">শারদীয়া</span>
+    <span class="cover__year">{site.yearBn}</span>
+  </header>
+
+  <div class="cover__window">
+    <Photo pandal={pandal} seed={seed} eager={eager} />
+  </div>
+
+  <footer class="cover__foot">
+    <span class="cover__name">{pandal.nameBn}</span>
+    {pandal.themeBn && <span class="cover__theme">এবারের থিম: {pandal.themeBn}</span>}
+  </footer>
+
+  <span class="cover__price" aria-hidden="true">দাম<br />ভালোবাসা</span>
+</div>
+
+<style>
+  .cover {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    aspect-ratio: 3 / 4;
+    width: 100%;
+    padding: 4.5%;
+    background: var(--bg);
+    color: var(--ink);
+    border: 3px solid var(--deep);
+    box-shadow:
+      inset 0 0 0 6px var(--bg),
+      inset 0 0 0 8px var(--deep),
+      8px 10px 0 -2px var(--soft),
+      8px 10px 0 0 var(--deep);
+    container-type: inline-size;
+  }
+
+  .cover__mast {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    padding-bottom: 2%;
+    border-bottom: 3px double var(--deep);
+  }
+
+  .cover__kicker {
+    grid-column: 1 / -1;
+    margin-bottom: 8.2px;
+    margin-bottom: 2.5cqi;
+    font-family: var(--font-serif);
+    font-size: 13.9px;
+    font-size: 4.2cqi;
+    letter-spacing: 0.04em;
+    color: var(--deep);
+  }
+
+  .cover__title {
+    font-family: var(--font-sign);
+    font-size: 59.4px;
+    font-size: 18cqi;
+    line-height: 1.15;
+    color: var(--accent);
+    text-shadow:
+      2px 2px 0 var(--deep),
+      4px 4px 0 var(--soft);
+  }
+
+  .cover__year {
+    font-family: var(--font-serif);
+    font-size: 26.4px;
+    font-size: 8cqi;
+    color: var(--deep);
+  }
+
+  .cover__window {
+    min-height: 0;
+    position: relative;
+    margin-block: 4%;
+    overflow: hidden;
+    border: 3px solid var(--deep);
+  }
+
+  /* printed-halftone dots over the photo */
+  .cover__window::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgb(0 0 0 / 0.22) 0.7px, transparent 1.2px) 0 0 / 4px 4px;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  .cover__foot {
+    display: grid;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .cover__name {
+    font-family: var(--font-serif);
+    font-size: 24.8px;
+    font-size: 7.5cqi;
+    line-height: 1.15;
+    color: var(--deep);
+  }
+
+  .cover__theme {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 14.5px;
+    font-size: 4.4cqi;
+  }
+
+  .cover__price {
+    position: absolute;
+    top: 22%;
+    right: 3%;
+    display: grid;
+    place-items: center;
+    width: 69.3px;
+    width: 21cqi;
+    height: 69.3px;
+    height: 21cqi;
+    border: 2px solid var(--deep);
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--font-sign);
+    font-size: 13.2px;
+    font-size: 4cqi;
+    line-height: 1.1;
+    text-align: center;
+    transform: rotate(12deg);
+    box-shadow: 2px 2px 0 var(--deep);
+  }
+</style>

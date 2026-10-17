@@ -1,0 +1,135 @@
+---
+// Drawn stand-in for a pandal photo: a pandal gate with Ma's face inside.
+// `seed` varies the details so no two placeholders look identical.
+import type { Palette } from '../data/palettes';
+
+interface Props {
+  palette: Palette;
+  seed?: number;
+}
+
+const { palette: p, seed = 0 } = Astro.props;
+const uid = `pa${seed}`;
+
+const scallops = 7 + (seed % 3);
+const sw = 300 / scallops;
+const awning = Array.from({ length: scallops }, (_, i) => {
+  const x = i * sw;
+  return `M${x},70 Q${x + sw / 2},${96} ${x + sw},70`;
+}).join(' ');
+
+const pointed = seed % 2 === 1;
+const archPath = pointed
+  ? 'M70,400 L70,190 Q70,120 150,96 Q230,120 230,190 L230,400 Z'
+  : 'M70,400 L70,180 A80,80 0 0 1 230,180 L230,400 Z';
+
+const bulbs = Array.from({ length: 13 }, (_, i) => ({
+  x: 12 + i * 23,
+  y: 116 + Math.sin(i / 1.9) * 7,
+  c: [p.accent, '#fffaf0', p.soft][(i + seed) % 3],
+}));
+
+// Mukut (crown) spikes fanning out above the face
+const spikes = Array.from({ length: 9 }, (_, i) => {
+  const a = Math.PI + (i / 8) * Math.PI;
+  const x1 = 150 + Math.cos(a) * 46;
+  const y1 = 198 + Math.sin(a) * 46;
+  const x2 = 150 + Math.cos(a) * 70;
+  const y2 = 198 + Math.sin(a) * 70;
+  return { x1, y1, x2, y2 };
+});
+---
+
+<svg viewBox="0 0 300 400" class="pandal-art" role="img" aria-label="পুজোর ছবি আসছে — illustration placeholder" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id={`${uid}-glow`} cx="50%" cy="55%" r="55%">
+      <stop offset="0%" stop-color={p.accent} stop-opacity=".9" />
+      <stop offset="100%" stop-color={p.deep} stop-opacity="1" />
+    </radialGradient>
+  </defs>
+
+  <!-- night sky & ground -->
+  <rect width="300" height="400" fill={p.deep} />
+  <rect y="330" width="300" height="70" fill={p.bg} opacity=".35" />
+
+  <!-- pandal facade -->
+  <rect x="20" y="60" width="260" height="340" fill={p.bg} stroke={p.deep} stroke-width="3" />
+  <path d={archPath} fill={`url(#${uid}-glow)`} stroke={p.accent} stroke-width="5" />
+
+  <!-- halo behind Ma -->
+  <circle cx="150" cy="212" r="78" fill="none" stroke={p.accent} stroke-width="3" stroke-dasharray="2 7" />
+  <circle cx="150" cy="212" r="64" fill={p.deep} opacity=".35" />
+
+  <!-- hair -->
+  <ellipse cx="150" cy="232" rx="62" ry="70" fill="#1b0f0a" />
+
+  <!-- mukut -->
+  <g stroke={p.accent} stroke-width="5" stroke-linecap="round">
+    {spikes.map((s) => <line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />)}
+  </g>
+  <path d="M100,196 Q150,150 200,196 Z" fill={p.accent} stroke={p.deep} stroke-width="2" />
+  <circle cx="150" cy="180" r="6" fill={p.bg} />
+
+  <!-- face -->
+  <ellipse cx="150" cy="236" rx="42" ry="50" fill="#f2a43a" stroke="#7a3d0b" stroke-width="2" />
+
+  <!-- brows -->
+  <path d="M112,218 Q128,204 146,216" fill="none" stroke="#1b0f0a" stroke-width="3.5" stroke-linecap="round" />
+  <path d="M188,218 Q172,204 154,216" fill="none" stroke="#1b0f0a" stroke-width="3.5" stroke-linecap="round" />
+
+  <!-- the famous elongated eyes -->
+  <path d="M106,232 Q126,216 146,232 Q126,240 106,232 Z" fill="#fffaf0" stroke="#1b0f0a" stroke-width="3" />
+  <path d="M194,232 Q174,216 154,232 Q174,240 194,232 Z" fill="#fffaf0" stroke="#1b0f0a" stroke-width="3" />
+  <circle cx="129" cy="230" r="5" fill="#1b0f0a" />
+  <circle cx="171" cy="230" r="5" fill="#1b0f0a" />
+
+  <!-- trinayan — third eye -->
+  <path d="M150,192 Q158,202 150,212 Q142,202 150,192 Z" fill="#fffaf0" stroke="#1b0f0a" stroke-width="2.5" />
+  <circle cx="150" cy="202" r="2.6" fill="#1b0f0a" />
+
+  <!-- nose, nath, lips -->
+  <path d="M150,236 L146,256 Q150,259 154,256" fill="none" stroke="#7a3d0b" stroke-width="2" />
+  <circle cx="141" cy="258" r="7" fill="none" stroke={p.accent} stroke-width="2.5" />
+  <path d="M140,270 Q150,277 160,270 Q150,266 140,270 Z" fill="#b3261e" />
+
+  <!-- awning with scalloped edge -->
+  <rect x="0" y="40" width="300" height="32" fill={p.accent} />
+  <path d={awning + ' L300,40 L0,40 Z'} fill={p.accent} stroke={p.deep} stroke-width="2" />
+  <g fill="none" stroke={p.deep} stroke-width="1.5" opacity=".6">
+    {Array.from({ length: 12 }, (_, i) => <line x1={i * 26 + 6} y1="42" x2={i * 26 + 6} y2="70" />)}
+  </g>
+
+  <!-- string of bulbs -->
+  <path d="M0,112 Q150,134 300,112" fill="none" stroke="#1b0f0a" stroke-width="1.2" />
+  {bulbs.map((b) => <circle cx={b.x} cy={b.y} r="4.5" fill={b.c} class="pandal-art__bulb" />)}
+
+  <!-- ground line & kash -->
+  <path d="M0,400 L0,370 Q30,350 40,380 Q48,330 62,378 Q70,340 80,400 Z" fill="#fffaf0" opacity=".85" />
+  <path d="M300,400 L300,372 Q270,350 262,382 Q252,332 238,380 Q230,345 220,400 Z" fill="#fffaf0" opacity=".85" />
+</svg>
+
+<style>
+  .pandal-art {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .pandal-art__bulb {
+    animation: twinkle 1.6s ease-in-out infinite;
+  }
+
+  .pandal-art__bulb:nth-of-type(3n) {
+    animation-delay: 0.5s;
+  }
+
+  .pandal-art__bulb:nth-of-type(3n + 1) {
+    animation-delay: 1s;
+  }
+
+  @keyframes twinkle {
+    50% {
+      opacity: 0.35;
+    }
+  }
+</style>

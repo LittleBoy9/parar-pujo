@@ -1,0 +1,75 @@
+---
+// WhatsApp first — that's where para news actually travels.
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<div class="share" data-share-text={text}>
+  <span class="share__label">পাড়ায় ছড়িয়ে দিন:</span>
+  <a class="share__btn share__btn--wa" data-share-wa href="https://wa.me/" target="_blank" rel="noopener">WhatsApp</a>
+  <button class="share__btn" type="button" data-share-native hidden>শেয়ার</button>
+  <button class="share__btn" type="button" data-share-copy>লিংক কপি</button>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-share-text]').forEach((box) => {
+    const url = location.href.split('#')[0];
+    const text = box.dataset.shareText!;
+    const wa = box.querySelector<HTMLAnchorElement>('[data-share-wa]')!;
+    wa.href = `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
+
+    const native = box.querySelector<HTMLButtonElement>('[data-share-native]')!;
+    if ('share' in navigator) {
+      native.hidden = false;
+      native.addEventListener('click', () => navigator.share({ title: text, url }).catch(() => {}));
+    }
+
+    const copy = box.querySelector<HTMLButtonElement>('[data-share-copy]')!;
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        copy.textContent = 'কপি হয়েছে ✓';
+      } catch {
+        copy.textContent = url;
+      }
+    });
+  });
+</script>
+
+<style>
+  .share {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 8px;
+  }
+
+  .share__label {
+    grid-column: 1 / -1;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .share__btn {
+    display: grid;
+    place-items: center;
+    min-height: 42px;
+    padding: 0.3em 0.6em;
+    text-align: center;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .share__btn--wa {
+    background: #25d366;
+    border-color: #128c4a;
+    color: #06341b;
+  }
+</style>

@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="রাস্তা হারিয়েছেন?" noindex>
+  <section class="lost wrap">
+    <p class="lost__big">ভিড়ে হারিয়ে গেলেন?</p>
+    <p>এই পাতাটা খুঁজে পাওয়া গেল না। মাইকে ঘোষণা করার আগেই বাড়ি ফিরে চলুন।</p>
+    <p class="en">This page got lost in the crowd.</p>
+    <a class="btn btn--red" href="/">পাড়ার পুজোয় ফিরুন</a>
+  </section>
+</Layout>
+
+<style>
+  .lost {
+    padding-block: 80px 40px;
+    text-align: center;
+  }
+
+  .lost__big {
+    margin: 0 0 12px;
+    font-family: var(--font-sign);
+    font-size: clamp(2.6rem, 10vw, 4rem);
+    color: var(--sindoor);
+  }
+
+  .lost .btn {
+    margin-top: 20px;
+  }
+</style>

@@ -1,0 +1,166 @@
+---
+// "এই সাইটটা বানিয়েছেন" — the maker, framed like everything else on the site:
+// photo in a marigold garland, name in signboard lettering, links to website and Instagram.
+import { creator } from '../data/site';
+
+const beads = Array.from({ length: 28 }, (_, i) => {
+  const a = (i / 28) * Math.PI * 2;
+  return { x: 100 + Math.cos(a) * 92, y: 100 + Math.sin(a) * 92, c: i % 2 ? '#f59f1a' : '#e8731c' };
+});
+---
+
+<section id="creator" class="maker wrap" aria-labelledby="maker-title">
+  <div class="maker__card">
+    <div class="maker__photo">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        {beads.map((b) => <circle cx={b.x} cy={b.y} r="9" fill={b.c} />)}
+      </svg>
+      <img src={creator.photo} alt={`${creator.nameBn} — ${creator.nameEn}`} width="480" height="480" loading="lazy" decoding="async" />
+    </div>
+
+    <div class="maker__text">
+      <p class="maker__kicker">এই সাইটটা বানিয়েছেন</p>
+      <h2 id="maker-title" class="maker__name">{creator.nameBn}</h2>
+      <p class="en maker__en">Made with love by {creator.nameEn}</p>
+      <p class="maker__line">ভাবনা, ডিজাইন আর তৈরি — পাড়ার পুজোর জন্য, ভালোবেসে।</p>
+      <div class="maker__links">
+        <a class="btn btn--red" href={creator.instagramUrl} target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
+            <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2" />
+            <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2" />
+            <circle cx="17.4" cy="6.6" r="1.3" fill="currentColor" />
+          </svg>
+          @{creator.instagram}
+        </a>
+        <a class="btn" href={creator.website} target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+          {creator.websiteLabel}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .maker {
+    padding-block: 56px 8px;
+  }
+
+  .maker__card {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 22px;
+    max-width: 760px;
+    margin-inline: auto;
+    padding: 32px 24px 28px;
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at 18% 20%, rgb(239 177 40 / 0.28), transparent 45%),
+      radial-gradient(circle at 90% 90%, rgb(179 38 30 / 0.14), transparent 50%),
+      var(--kash);
+    box-shadow: 6px 6px 0 var(--ink);
+    text-align: center;
+  }
+
+  /* lal-paar strip across the top of the card */
+  .maker__card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 14px;
+    border-radius: 19px 19px 0 0;
+    background:
+      radial-gradient(circle at 7px 7px, var(--haldi) 2.5px, transparent 3px) 0 0 / 14px 14px,
+      var(--sindoor);
+  }
+
+  .maker__photo {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    flex: none;
+  }
+
+  .maker__photo svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .maker__photo img {
+    position: absolute;
+    inset: 12%;
+    width: 76%;
+    height: 76%;
+    border-radius: 50%;
+    border: 4px solid #fffaf0;
+    object-fit: cover;
+    box-shadow: 0 6px 18px rgb(43 26 16 / 0.3);
+  }
+
+  .maker__kicker {
+    display: inline-block;
+    margin: 0;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--kash);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .maker__name {
+    margin-top: 8px;
+    font-family: var(--font-sign);
+    font-size: clamp(2.6rem, 10vw, 3.6rem);
+    color: var(--sindoor);
+    text-shadow: 3px 3px 0 var(--haldi);
+  }
+
+  .maker__en {
+    margin: 2px 0 0;
+  }
+
+  .maker__line {
+    margin: 10px 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+  }
+
+  .maker__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .maker__links .btn {
+    gap: 8px;
+  }
+
+  @media (min-width: 680px) {
+    .maker__card {
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 32px;
+      padding: 36px 36px 30px;
+      text-align: left;
+    }
+
+    .maker__photo {
+      width: 210px;
+      height: 210px;
+    }
+
+    .maker__links {
+      justify-content: flex-start;
+    }
+  }
+</style>

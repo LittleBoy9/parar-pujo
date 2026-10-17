@@ -1,0 +1,339 @@
+---
+// Sharat sky, kash phool swaying, the Ganga on the horizon, shiuli falling.
+import { site } from '../data/site';
+import DhakButton from './DhakButton.astro';
+import CreatorChip from './CreatorChip.astro';
+
+// Deterministic pseudo-random so the build output is stable
+let s = 7;
+const rand = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+
+const clumpXs = [30, 170, 330, 470, 760, 900, 1050, 1180];
+const kash = clumpXs.flatMap((cx, ci) =>
+  Array.from({ length: 6 }, (_, i) => {
+    const x = cx + (rand() - 0.5) * 90;
+    const h = 150 + rand() * 120 - (ci === 3 || ci === 4 ? 40 : 0);
+    const lean = (rand() - 0.5) * 60;
+    return { x, h, lean, delay: (rand() * 3).toFixed(2), dur: (3.5 + rand() * 2).toFixed(2), back: i % 2 === 0 };
+  }),
+);
+
+const clouds = [
+  { x: 6, y: 14, s: 1.1, d: 0 },
+  { x: 62, y: 8, s: 0.8, d: -14 },
+  { x: 82, y: 30, s: 0.6, d: -30 },
+  { x: 30, y: 34, s: 0.5, d: -8 },
+];
+
+const flowers = Array.from({ length: 12 }, () => ({
+  left: (rand() * 100).toFixed(1),
+  delay: (rand() * 14).toFixed(2),
+  dur: (11 + rand() * 9).toFixed(2),
+  size: (14 + rand() * 12).toFixed(0),
+  drift: ((rand() - 0.5) * 160).toFixed(0),
+}));
+
+const lights = Array.from({ length: 22 }, (_, i) => ({ x: 596 + i * 6.2, y: 286 + Math.sin(i / 3.5) * 3 }));
+---
+
+<section class="hero">
+  <svg width="0" height="0" class="visually-hidden" aria-hidden="true">
+    <symbol id="shiuli" viewBox="-20 -20 40 40">
+      {[0, 60, 120, 180, 240, 300].map((a) => <ellipse cx="0" cy="-9" rx="5" ry="9" fill="#fffaf0" stroke="#e9dcc4" stroke-width=".8" transform={`rotate(${a})`} />)}
+      <circle r="3.6" fill="#e8731c" />
+    </symbol>
+  </svg>
+
+  <!-- clouds -->
+  {
+    clouds.map((c) => (
+      <svg class="hero__cloud" viewBox="0 0 220 90" aria-hidden="true" style={`left:${c.x}%;top:${c.y}%;--s:${c.s};animation-delay:${c.d}s`}>
+        <path d="M30,80 Q0,80 8,60 Q0,36 34,40 Q40,10 80,20 Q100,0 130,18 Q170,6 176,40 Q214,38 208,64 Q214,84 186,80 Z" fill="#fffdf6" />
+      </svg>
+    ))
+  }
+
+  <div class="hero__text wrap">
+    <p class="hero__kicker">দুর্গাপুজো · শারদীয়া {site.yearBn}</p>
+    <h1 class="hero__title">{site.titleBn}</h1>
+    <p class="hero__tag">{site.taglineBn}</p>
+    <p class="en hero__tag-en">{site.taglineEn}</p>
+    <div class="hero__ctas">
+      <a href="/card" class="btn btn--red hero__main">✨ নিজের পুজোর পোস্টার বানান</a>
+      <a href="#pujas" class="btn">পাড়ায় পাড়ায় পুজো →</a>
+    </div>
+    <div class="hero__by">
+      <CreatorChip />
+    </div>
+    <p class="hero__stats" data-stats hidden></p>
+  </div>
+
+  <svg class="hero__land" viewBox="0 0 1200 460" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <!-- far bank: temple + pandal with lights across the Ganga -->
+    <g fill="#8fa7b0">
+      <path d="M0,300 Q150,288 300,296 L300,300 Z" />
+      <path d="M380,300 L380,262 L392,262 L392,250 Q401,226 410,250 L410,262 L422,262 L422,300 Z" />
+      <path d="M560,300 L560,276 Q640,250 720,276 L720,300 Z" />
+      <path d="M900,300 Q1000,284 1200,292 L1200,300 Z" />
+    </g>
+    <path d="M556,276 Q640,248 724,276" fill="none" stroke="#5f7882" stroke-width="2" />
+    {lights.map((l, i) => <circle cx={l.x} cy={l.y} r="2.2" fill={i % 3 ? '#ffd36b' : '#e8644f'} class="hero__light" />)}
+
+    <!-- the Ganga -->
+    <rect y="298" width="1200" height="70" fill="#6fa3ad" />
+    <g stroke="#e8f4f4" stroke-width="2.5" stroke-linecap="round" opacity=".7">
+      <path d="M90,318 h70 M300,330 h110 M640,316 h60 M820,336 h120 M1020,320 h80 M180,346 h50 M520,350 h80" />
+    </g>
+    <g class="hero__boat" fill="#2b3f45">
+      <path d="M0,10 Q60,28 120,10 L110,20 Q60,34 10,20 Z" />
+      <path d="M38,10 Q60,-16 86,10 Z" />
+    </g>
+
+    <!-- near bank -->
+    <path d="M0,360 Q300,340 600,356 T1200,350 L1200,460 L0,460 Z" fill="#c9b27a" />
+    <path d="M0,392 Q320,372 640,390 T1200,384 L1200,460 L0,460 Z" fill="#9c8a4f" />
+
+    <!-- kash phool -->
+    {
+      kash.map((k) => (
+        <g class="hero__kash" style={`animation-delay:-${k.delay}s;animation-duration:${k.dur}s`} opacity={k.back ? 0.75 : 1}>
+          <path d={`M${k.x},460 Q${k.x + k.lean * 0.3},${460 - k.h * 0.6} ${k.x + k.lean},${460 - k.h}`} stroke="#6e7a3a" stroke-width="2.4" fill="none" />
+          <path
+            d={`M${k.x + k.lean},${460 - k.h} q${-14 + k.lean * 0.1},${32} ${-6},${78} q${10},${-10} ${12},${-78} q${8},${40} ${4},${78} q${-2},${-46} ${-10},${-78}`}
+            fill="#fffaf0"
+            stroke="#e7dcc6"
+            stroke-width="1"
+          />
+        </g>
+      ))
+    }
+
+    <!-- a dhak waiting by the bank, plumes up -->
+    <g transform="translate(560 362)">
+      <ellipse cx="40" cy="62" rx="46" ry="6" fill="#000" opacity=".15" />
+      <g fill="#fffaf0" stroke="#2b1a10" stroke-width="1.5">
+        <path d="M22,4 C8,-30 26,-36 30,2" />
+        <path d="M38,0 C34,-40 50,-42 46,0" />
+        <path d="M54,4 C66,-28 80,-20 60,6" />
+      </g>
+      <ellipse cx="40" cy="30" rx="42" ry="30" fill="#b3261e" stroke="#2b1a10" stroke-width="3" />
+      <path d="M2,22 Q40,42 78,22 M2,40 Q40,60 78,40" fill="none" stroke="#efb128" stroke-width="4" />
+      <ellipse cx="0" cy="30" rx="7" ry="22" fill="#f1dcc0" stroke="#2b1a10" stroke-width="2.5" />
+    </g>
+  </svg>
+
+  <div class="hero__dhak">
+    <DhakButton autostart />
+    <span class="hero__dhak-hint" data-dhak-hint>ঢাক বাজান!</span>
+  </div>
+
+  <!-- shiuli drifting down -->
+  <div class="hero__shiuli" aria-hidden="true">
+    {
+      flowers.map((f) => (
+        <svg style={`left:${f.left}%;width:${f.size}px;height:${f.size}px;animation-delay:-${f.delay}s;animation-duration:${f.dur}s;--drift:${f.drift}px`}>
+          <use href="#shiuli" />
+        </svg>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  // the little label under the dhak follows what it's doing
+  const hint = document.querySelector<HTMLElement>('[data-dhak-hint]');
+  document.addEventListener('dhak:change', (e) => {
+    if (hint) hint.textContent = (e as CustomEvent<boolean>).detail ? 'ঢাক বাজছে · থামাতে চাপুন' : 'ঢাক বাজান!';
+  });
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: min(86vh, 860px);
+    min-height: min(86svh, 860px);
+    overflow: hidden;
+    background: linear-gradient(#a9d6e6 0%, #cfe8ee 45%, #f3ead6 100%);
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero__text {
+    position: relative;
+    z-index: 2;
+    padding-top: clamp(40px, 9vh, 90px);
+    text-align: center;
+  }
+
+  .hero__kicker {
+    display: inline-block;
+    margin: 0 0 12px;
+    padding: 4px 14px;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    background: var(--kash);
+    background: color-mix(in srgb, var(--kash) 75%, transparent);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .hero__title {
+    font-family: var(--font-sign);
+    font-size: clamp(4.2rem, 18vw, 9.5rem);
+    line-height: 1;
+    color: var(--sindoor);
+    -webkit-text-stroke: 2px var(--kash);
+    paint-order: stroke fill;
+    text-shadow:
+      4px 4px 0 var(--haldi),
+      7px 7px 0 var(--ink);
+  }
+
+  .hero__tag {
+    margin: 18px 0 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.3rem, 4.5vw, 1.8rem);
+  }
+
+  .hero__tag-en {
+    margin: 2px 0 0;
+  }
+
+  .hero__dhak {
+    position: absolute;
+    right: 16px;
+    bottom: 18px;
+    z-index: 4;
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+  }
+
+  .hero__dhak-hint {
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--kash);
+    font-family: var(--font-sign);
+    font-size: 0.85rem;
+  }
+
+  .hero__by {
+    margin-top: 18px;
+  }
+
+  .hero__stats {
+    display: inline-block;
+    margin: 12px 0 0;
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: rgb(27 18 12 / 0.78);
+    color: #fffaf0;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .hero__main {
+    font-size: 1.1rem;
+    padding: 0.7em 1.3em;
+  }
+
+  .hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .hero__land {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: clamp(260px, 42vh, 440px);
+    margin-top: auto;
+  }
+
+  .hero__cloud {
+    position: absolute;
+    width: calc(220px * var(--s));
+    animation: drift 60s linear infinite alternate;
+  }
+
+  @keyframes drift {
+    to {
+      translate: 60px 0;
+    }
+  }
+
+  .hero__kash {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: sway ease-in-out infinite alternate;
+  }
+
+  @keyframes sway {
+    from {
+      rotate: -2.5deg;
+    }
+    to {
+      rotate: 3deg;
+    }
+  }
+
+  .hero__boat {
+    animation: row 40s linear infinite;
+  }
+
+  @keyframes row {
+    from {
+      transform: translate(-140px, 306px);
+    }
+    to {
+      transform: translate(1220px, 306px);
+    }
+  }
+
+  .hero__light {
+    animation: blink 1.4s steps(1) infinite;
+  }
+
+  .hero__light:nth-child(even) {
+    animation-delay: 0.7s;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0.25;
+    }
+  }
+
+  .hero__shiuli {
+    position: absolute;
+    inset: 0;
+    z-index: 1; /* drift behind the title and buttons, never over them */
+    pointer-events: none;
+  }
+
+  .hero__shiuli svg {
+    position: absolute;
+    top: -30px;
+    animation: fall linear infinite;
+  }
+
+  @keyframes fall {
+    0% {
+      transform: translate(0, 0) rotate(0);
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--drift), min(95vh, 900px)) rotate(540deg);
+      transform: translate(var(--drift), min(95svh, 900px)) rotate(540deg);
+      opacity: 0.9;
+    }
+  }
+</style>

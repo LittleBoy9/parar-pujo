@@ -1,0 +1,157 @@
+---
+// Our own para's guide (Ghoshpur · Chatra · Aurobindo Road): every pandal in route order,
+// the hand-drawn map and the passport. /chatra redirects here.
+import Layout from '../layouts/Layout.astro';
+import PandalCard from '../components/PandalCard.astro';
+import ParaMap from '../components/ParaMap.astro';
+import StoryRing from '../components/StoryRing.astro';
+import { pandals } from '../data/pandals';
+import { site } from '../data/site';
+import { toBnDigits } from '../lib/bangla';
+
+---
+
+<Layout
+  title="আমাদের পাড়ার ঠাকুর"
+  description={`${site.areaBn}-এর দুর্গাপুজো — ঠাকুর দেখার রুট, হাতে আঁকা ম্যাপ আর পাসপোর্ট। Durga Puja pandals in ${site.areaEn}: route map and passport.`}
+  og="para"
+  ogAlt={`আমাদের পাড়ার ঠাকুর — ${site.areaBn}`}
+>
+  <header class="local wrap">
+    <p class="local__kicker">{site.areaBn}</p>
+    <h1 class="local__title">আমাদের পাড়ার ঠাকুর</h1>
+    <p class="local__sub">
+      {site.areaBn} — {toBnDigits(pandals.length)}টা পুজো, নম্বর ধরে ঘুরলেই সব দেখা হয়ে যাবে
+      <span class="en">· {site.areaEn}</span>
+    </p>
+    <nav class="local__jump" aria-label="এই পাতায়">
+      <a class="btn" href="#thakur">ঠাকুর</a>
+      <a class="btn" href="#map">ম্যাপ</a>
+      <a class="btn btn--yellow" href="/passport">পাসপোর্ট</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <StoryRing />
+  </div>
+
+  <div class="lalpaar" aria-hidden="true"></div>
+
+  <section id="thakur" class="wrap section">
+    <div class="cards">
+      {pandals.map((p, i) => <PandalCard pandal={p} index={i} />)}
+    </div>
+    <p class="more">
+      🪔 <b>পাড়ার আরও ঠাকুর আসছে…</b> একে একে সব পুজো যোগ হচ্ছে।
+      <span class="en">More pujas from the para coming soon.</span>
+    </p>
+  </section>
+
+  <div class="lalpaar" aria-hidden="true"></div>
+
+  <section id="map" class="wrap section">
+    <h2 class="section-title">পাড়ার ম্যাপ</h2>
+    <p class="section-sub">ঠাকুর দেখার রুট <span class="en"> · the pandal-hopping route</span></p>
+    <ParaMap />
+  </section>
+
+  <section class="wrap section">
+    <div class="invite">
+      <h2 class="invite__title">ঠাকুর দেখা পাসপোর্ট</h2>
+      <p>প্রতিটা ঠাকুর দেখে "দেখে এলাম" টিপুন — পাসপোর্টে ছাপ পড়বে। কে কটা দেখল, শেয়ার করে দেখান!</p>
+      <p class="en">Stamp every pandal you visit, then show off your count.</p>
+      <a class="btn btn--yellow" href="/passport">আমার পাসপোর্ট</a>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { bindVisitButtons } from '../scripts/passport';
+  bindVisitButtons();
+</script>
+
+<style>
+  .local {
+    padding-top: 36px;
+    text-align: center;
+  }
+
+  .local__kicker {
+    display: inline-block;
+    margin: 0;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--kash);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .local__title {
+    margin-top: 8px;
+    font-family: var(--font-sign);
+    font-size: clamp(2.8rem, 12vw, 4.6rem);
+    color: var(--sindoor);
+  }
+
+  .local__sub {
+    margin: 6px 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+  }
+
+  .local__jump {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0 8px;
+  }
+
+  .section {
+    padding-block: 56px 24px;
+  }
+
+  .more {
+    max-width: 560px;
+    margin: 8px auto 0;
+    padding: 16px 20px;
+    border: 2.5px dashed var(--ink);
+    border-radius: 14px;
+    background: var(--kash);
+    font-family: var(--font-serif);
+    text-align: center;
+  }
+
+  .more b {
+    font-family: var(--font-sign);
+    font-weight: 400;
+    font-size: 1.4rem;
+    color: var(--sindoor);
+  }
+
+  .more .en {
+    display: block;
+    font-size: 0.85rem;
+  }
+
+  .invite {
+    max-width: 640px;
+    margin-inline: auto;
+    padding: 28px 24px;
+    background: var(--kash);
+    border: 2.5px solid var(--ink);
+    border-radius: 10px;
+    box-shadow: 5px 5px 0 var(--ink);
+    rotate: -0.8deg;
+  }
+
+  .invite__title {
+    font-family: var(--font-sign);
+    font-size: 2.2rem;
+  }
+
+  .invite p {
+    margin: 10px 0;
+  }
+</style>

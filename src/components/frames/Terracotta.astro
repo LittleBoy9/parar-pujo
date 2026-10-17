@@ -1,0 +1,115 @@
+---
+// A Bishnupur-style terracotta temple: curved chala roof, ratna pinnacle, tiled pillars.
+import type { Pandal } from '../../data/pandals';
+import { palettes } from '../../data/palettes';
+import Photo from '../Photo.astro';
+
+interface Props {
+  pandal: Pandal;
+  seed?: number;
+  eager?: boolean;
+}
+
+const { pandal, seed = 0, eager } = Astro.props;
+const p = palettes[pandal.palette];
+
+// Square relief tiles on the two pillars, alternating flower and little figure
+const tiles: { x: number; y: number; kind: number }[] = [];
+for (let row = 0; row < 8; row++) {
+  for (const x of [30, 58, 274, 302]) {
+    tiles.push({ x, y: 196 + row * 30, kind: (row + x) % 3 });
+  }
+}
+
+// Lobed (cusped) arch outline around the window
+const lobes = Array.from({ length: 11 }, (_, i) => {
+  const a = Math.PI + (i / 10) * Math.PI;
+  return { x: 180 + Math.cos(a) * 92, y: 288 + Math.sin(a) * 92 };
+});
+
+// Frieze of tiny arches under the roof
+const frieze = Array.from({ length: 13 }, (_, i) => 30 + i * 23.3);
+---
+
+<div class="terracotta">
+  <svg class="terracotta__art" viewBox="0 0 360 480" aria-hidden="true">
+    <!-- ratna (pinnacle) -->
+    <g fill={p.bg} stroke={p.deep} stroke-width="2.5">
+      <rect x="156" y="58" width="48" height="40" />
+      <path d="M150,60 Q180,22 210,60 Z" />
+      <path d="M180,6 L186,24 L174,24 Z" fill={p.accent} />
+      <circle cx="180" cy="30" r="6" fill={p.accent} />
+      <path d="M164,98 L164,70 Q172,64 172,70 L172,98 M188,98 L188,70 Q196,64 196,70 L196,98" fill="none" />
+    </g>
+
+    <!-- walls -->
+    <rect x="22" y="160" width="316" height="304" fill={p.bg} stroke={p.deep} stroke-width="3" />
+
+    <!-- curved chala roof, two tiers -->
+    <path d="M6,170 Q180,64 354,170 L354,190 Q180,90 6,190 Z" fill={p.deep} />
+    <path d="M14,176 Q180,78 346,176" fill="none" stroke={p.accent} stroke-width="2" stroke-dasharray="6 4" />
+
+    <!-- frieze -->
+    <g fill="none" stroke={p.deep} stroke-width="2">
+      {frieze.map((x) => <path d={`M${x - 9},212 L${x - 9},200 A9,9 0 0 1 ${x + 9},200 L${x + 9},212`} />)}
+    </g>
+    <line x1="22" y1="214" x2="338" y2="214" stroke={p.deep} stroke-width="2" />
+
+    <!-- pillar tiles -->
+    {
+      tiles.map((t) => (
+        <g transform={`translate(${t.x} ${t.y + 22})`}>
+          <rect width="26" height="26" fill={p.soft} stroke={p.deep} stroke-width="1.5" />
+          {t.kind === 0 && <circle cx="13" cy="13" r="7" fill="none" stroke={p.deep} stroke-width="1.5" />}
+          {t.kind === 0 && <circle cx="13" cy="13" r="2.5" fill={p.deep} />}
+          {t.kind === 1 && (
+            <g fill={p.deep}>
+              <circle cx="13" cy="7" r="3.5" />
+              <path d="M7,22 Q13,8 19,22 Z" />
+            </g>
+          )}
+          {t.kind === 2 && <path d="M13,4 L22,13 L13,22 L4,13 Z" fill="none" stroke={p.deep} stroke-width="1.5" />}
+        </g>
+      ))
+    }
+
+    <!-- cusped arch around the window -->
+    <path d="M88,464 L88,288 A92,92 0 0 1 272,288 L272,464" fill={p.deep} />
+    {lobes.map((l) => <circle cx={l.x} cy={l.y} r="10" fill={p.deep} />)}
+    <path d="M88,464 L88,288 A92,92 0 0 1 272,288 L272,464" fill="none" stroke={p.accent} stroke-width="3" />
+
+    <!-- plinth steps -->
+    <rect x="12" y="462" width="336" height="9" fill={p.deep} />
+    <rect x="2" y="471" width="356" height="9" fill={p.soft} stroke={p.deep} stroke-width="1.5" />
+  </svg>
+
+  <div class="terracotta__window">
+    <Photo pandal={pandal} seed={seed} eager={eager} />
+  </div>
+</div>
+
+<style>
+  .terracotta {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    width: 100%;
+  }
+
+  .terracotta__art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* arch window: x 98–262, y 206–462, top radius 82 */
+  .terracotta__window {
+    position: absolute;
+    left: 27.2%;
+    top: 42.9%;
+    width: 45.6%;
+    height: 53.3%;
+    overflow: hidden;
+    border-radius: 50% 50% 0 0 / 32% 32% 0 0;
+  }
+</style>

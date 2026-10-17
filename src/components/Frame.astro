@@ -1,0 +1,31 @@
+---
+import type { FrameStyle, Pandal } from '../data/pandals';
+import Chalchitra from './frames/Chalchitra.astro';
+import Alpona from './frames/Alpona.astro';
+import Terracotta from './frames/Terracotta.astro';
+import Pujabarshiki from './frames/Pujabarshiki.astro';
+import Stamp from './frames/Stamp.astro';
+import Marquee from './frames/Marquee.astro';
+import Ghat from './frames/Ghat.astro';
+
+interface Props {
+  pandal: Pandal;
+  seed?: number;
+  eager?: boolean;
+}
+
+const frames = {
+  chalchitra: Chalchitra,
+  alpona: Alpona,
+  terracotta: Terracotta,
+  pujabarshiki: Pujabarshiki,
+  stamp: Stamp,
+  marquee: Marquee,
+  ghat: Ghat,
+} satisfies Record<FrameStyle, unknown>;
+
+const { pandal, seed, eager } = Astro.props;
+const Component = frames[pandal.frame];
+---
+
+<Component pandal={pandal} seed={seed} eager={eager} />

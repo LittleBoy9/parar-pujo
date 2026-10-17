@@ -1,0 +1,302 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="আপনার পাড়ার পুজো যোগ করুন"
+  description="আপনার পাড়ার দুর্গাপুজোর নাম আর একটা ছবি পাঠান — পাড়ার পুজোয় যোগ হবে, সবাই দেখতে পাবে। Add your para's Durga Puja to Parar Pujo."
+  og="add"
+  ogAlt="আপনার পাড়ার পুজো যোগ করুন — পাড়ার পুজো"
+>
+  <section class="add wrap">
+    <h1 class="section-title">আপনার পাড়ার পুজো যোগ করুন</h1>
+    <p class="section-sub">
+      আমাদের তালিকায় আপনার পুজো নেই? নাম আর একটা ছবি পাঠান <span class="en">· add your para's puja</span>
+    </p>
+
+    <form class="add__form" data-add-form novalidate>
+      <fieldset>
+        <legend>পুজোর নাম</legend>
+        <input type="text" name="nameBn" maxlength="40" required placeholder="বাংলায় — যেমন: নবীন সংঘ সার্বজনীন" />
+        <input type="text" name="nameEn" maxlength="40" placeholder="In English (optional) — e.g. Nabin Sangha" />
+      </fieldset>
+
+      <fieldset>
+        <legend>কোথায়?</legend>
+        <input type="text" name="areaBn" maxlength="30" required placeholder="পাড়া / এলাকা — যেমন: ঘোষপুর, শ্রীরামপুর" />
+        <input type="url" name="mapUrl" maxlength="300" inputmode="url" placeholder="গুগল ম্যাপের Share লিংক (ইচ্ছে হলে)" />
+        <p class="hint">Google Maps-এ পুজোটা খুঁজে "Share" চাপুন, লিংকটা এখানে দিন।</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>এবারের থিম <span class="en">(optional)</span></legend>
+        <input type="text" name="themeBn" maxlength="40" placeholder="যেমন: মাটির গন্ধ" />
+      </fieldset>
+
+      <fieldset>
+        <legend>প্যান্ডেল বা ঠাকুরের ছবি</legend>
+        <label class="pick">
+          <input type="file" accept="image/*" name="photo-file" required />
+          <img class="pick__preview" data-preview alt="" hidden />
+          <span class="pick__text" data-pick-text>📷 ছবি বাছুন</span>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>আপনার নাম <span class="en">(optional)</span></legend>
+        <input type="text" name="submitter" maxlength="30" placeholder="যেমন: পাড়ার রাজু" />
+      </fieldset>
+
+      <label class="consent">
+        <input type="checkbox" name="consent" value="yes" required />
+        <span>তথ্যগুলো ঠিক, আর ছবিটা আমার তোলা (বা তোলার অনুমতি আছে)।</span>
+      </label>
+      <p class="hint">দেখে নিয়ে সাইটে যোগ করা হবে — সাধারণত কয়েক ঘণ্টার মধ্যে।</p>
+
+      <p class="add__error" data-add-error role="alert" hidden></p>
+      <button class="btn btn--red add__go" type="submit" data-add-go>
+        <span data-add-label>পাঠিয়ে দিন</span>
+        <span class="add__bar" aria-hidden="true"><i data-add-bar></i></span>
+      </button>
+    </form>
+
+    <div class="done" data-add-done hidden>
+      <p class="done__big">পাঠানো হয়েছে! 🙏</p>
+      <p>দেখে নিয়েই আপনার পুজো পাড়ার পুজোয় যোগ হয়ে যাবে। ততক্ষণ নিজের পুজোর পোস্টার বানিয়ে ফেলুন!</p>
+      <p class="en">Thanks! It'll be listed once approved. Meanwhile, make a poster for your puja.</p>
+      <div class="done__actions">
+        <a class="btn btn--yellow" href="/card" data-card-link>পোস্টার বানান</a>
+        <a class="btn" href="/">পাড়ার পুজোয় ফিরুন</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { ApiError } from '../scripts/api';
+  import { compressPhoto, type Compressed } from '../scripts/compress';
+
+  const form = document.querySelector<HTMLFormElement>('[data-add-form]')!;
+  const fileInput = form.elements.namedItem('photo-file') as HTMLInputElement;
+  const preview = document.querySelector<HTMLImageElement>('[data-preview]')!;
+  const pickText = document.querySelector<HTMLElement>('[data-pick-text]')!;
+  const errorBox = document.querySelector<HTMLElement>('[data-add-error]')!;
+  const go = document.querySelector<HTMLButtonElement>('[data-add-go]')!;
+  const label = document.querySelector<HTMLElement>('[data-add-label]')!;
+  const bar = document.querySelector<HTMLElement>('[data-add-bar]')!;
+  const done = document.querySelector<HTMLElement>('[data-add-done]')!;
+  let photo: Compressed | null = null;
+
+  const showError = (msg: string) => {
+    errorBox.textContent = msg;
+    errorBox.hidden = false;
+    errorBox.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    errorBox.hidden = true;
+    if (!file) return;
+    pickText.textContent = 'ছবি তৈরি হচ্ছে…';
+    try {
+      if (photo) URL.revokeObjectURL(photo.previewUrl);
+      photo = await compressPhoto(file);
+      preview.src = photo.previewUrl;
+      preview.hidden = false;
+      pickText.textContent = '✓ ছবি বদলাতে চাপুন';
+    } catch {
+      photo = null;
+      preview.hidden = true;
+      pickText.textContent = '📷 ছবি বাছুন';
+      showError('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।');
+    }
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    errorBox.hidden = true;
+    const fd = new FormData(form);
+    if (!String(fd.get('nameBn')).trim()) return showError('পুজোর নামটা লিখুন।');
+    if (!String(fd.get('areaBn')).trim()) return showError('কোন পাড়া / এলাকা, লিখুন।');
+    if (!photo) return showError('একটা ছবি বাছুন।');
+    if (fd.get('consent') !== 'yes') return showError('সম্মতিতে টিক দিন।');
+
+    const body = new FormData();
+    for (const k of ['nameBn', 'nameEn', 'areaBn', 'mapUrl', 'themeBn', 'submitter']) body.set(k, String(fd.get(k) ?? ''));
+    body.set('consent', 'yes');
+    body.set('photo', photo.blob, 'puja.jpg');
+
+    go.disabled = true;
+    label.textContent = 'পাঠানো হচ্ছে…';
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/pujas');
+    xhr.upload.onprogress = (ev) => ev.lengthComputable && (bar.style.width = `${Math.round((ev.loaded / ev.total) * 100)}%`);
+    xhr.onloadend = () => {
+      go.disabled = false;
+      label.textContent = 'পাঠিয়ে দিন';
+      bar.style.width = '0';
+      let res: { error?: string; message?: string } = {};
+      try {
+        res = JSON.parse(xhr.responseText);
+      } catch {
+        // network failure
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        // Let them make a card for their own puja right away
+        const card = new URLSearchParams({ own: String(fd.get('nameBn')).trim(), area: String(fd.get('areaBn')).trim() });
+        document.querySelector<HTMLAnchorElement>('[data-card-link]')!.href = `/card?${card}`;
+        form.hidden = true;
+        done.hidden = false;
+        done.scrollIntoView({ block: 'center' });
+      } else {
+        showError(new ApiError(res.error ?? 'network', res.message ?? 'পাঠানো গেল না — আবার চেষ্টা করুন।').message);
+      }
+    };
+    xhr.send(body);
+  });
+</script>
+
+<style>
+  .add {
+    max-width: 640px;
+    padding-top: 40px;
+  }
+
+  .add__form {
+    margin-top: 28px;
+  }
+
+  fieldset {
+    margin: 0 0 22px;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    margin-bottom: 10px;
+    font-family: var(--font-sign);
+    font-size: 1.5rem;
+    color: var(--sindoor);
+  }
+
+  input[type='text'],
+  input[type='url'] {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--kash);
+    font: inherit;
+  }
+
+  .hint {
+    margin: 0 0 8px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .pick {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 170px;
+    padding: 14px;
+    border: 2.5px dashed var(--ink);
+    border-radius: 14px;
+    background: var(--kash);
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .pick input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+  }
+
+  .pick__preview {
+    max-height: 340px;
+    border-radius: 8px;
+  }
+
+  .pick__text {
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .consent {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .consent input {
+    width: 22px;
+    height: 22px;
+    margin-top: 3px;
+    flex: none;
+    accent-color: var(--sindoor);
+  }
+
+  .add__error {
+    margin: 16px 0 0;
+    padding: 10px 14px;
+    border-left: 5px solid var(--sindoor);
+    background: #fbe3dc;
+    font-weight: 600;
+  }
+
+  .add__go {
+    position: relative;
+    width: 100%;
+    margin-top: 18px;
+    justify-content: center;
+    font-size: 1.15rem;
+    overflow: hidden;
+  }
+
+  .add__bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+  }
+
+  .add__bar i {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--haldi);
+    transition: width 0.2s;
+  }
+
+  .done {
+    margin-top: 32px;
+    padding: 28px 22px;
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    background: var(--kash);
+    box-shadow: 5px 5px 0 var(--ink);
+    text-align: center;
+  }
+
+  .done__big {
+    margin: 0;
+    font-family: var(--font-sign);
+    font-size: 2.4rem;
+    color: var(--sindoor);
+  }
+
+  .done__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 18px;
+  }
+</style>

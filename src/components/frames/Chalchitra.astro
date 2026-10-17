@@ -1,0 +1,103 @@
+---
+// The painted arch (chalchitra) that sits behind the idol in a traditional ekchala protima.
+import type { Pandal } from '../../data/pandals';
+import { palettes } from '../../data/palettes';
+import Photo from '../Photo.astro';
+
+interface Props {
+  pandal: Pandal;
+  seed?: number;
+  eager?: boolean;
+}
+
+const { pandal, seed = 0, eager } = Astro.props;
+const p = palettes[pandal.palette];
+const cx = 200;
+const cy = 250;
+const polar = (r: number, deg: number) => {
+  const a = (deg * Math.PI) / 180;
+  return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+};
+
+const beads = [
+  ...Array.from({ length: 21 }, (_, i) => polar(188, 180 + i * 9)),
+  ...Array.from({ length: 12 }, (_, i) => ({ x: 12, y: 268 + i * 18 })),
+  ...Array.from({ length: 12 }, (_, i) => ({ x: 388, y: 268 + i * 18 })),
+];
+
+// Painted panels: radiating dividers with a little figure in each bay
+const dividers = Array.from({ length: 13 }, (_, i) => {
+  const deg = 180 + i * 15;
+  return { a: polar(126, deg), b: polar(160, deg) };
+});
+const figures = Array.from({ length: 12 }, (_, i) => polar(143, 187.5 + i * 15));
+---
+
+<div class="chalchitra" style={`--bg:${p.bg};--deep:${p.deep}`}>
+  <svg class="chalchitra__art" viewBox="0 0 400 500" aria-hidden="true">
+    <!-- outer halo -->
+    <path d="M12,486 L12,250 A188,188 0 0 1 388,250 L388,486 Z" fill={p.bg} stroke={p.deep} stroke-width="4" />
+    {beads.map((b) => <circle cx={b.x} cy={b.y} r="7.5" fill={p.ink} stroke={p.deep} stroke-width="1.5" />)}
+
+    <!-- gold band -->
+    <path d="M34,486 L34,250 A166,166 0 0 1 366,250 L366,486" fill="none" stroke={p.accent} stroke-width="12" />
+    <path d="M34,486 L34,250 A166,166 0 0 1 366,250 L366,486" fill="none" stroke={p.deep} stroke-width="1.5" stroke-dasharray="1 9" />
+
+    <!-- painted panels -->
+    <path d="M40,486 L40,250 A160,160 0 0 1 360,250 L360,486" fill={p.soft} />
+    {dividers.map((d) => <line x1={d.a.x} y1={d.a.y} x2={d.b.x} y2={d.b.y} stroke={p.deep} stroke-width="2" />)}
+    {
+      figures.map((f) => (
+        <g>
+          <circle cx={f.x} cy={f.y - 4} r="5.5" fill={p.accent} stroke={p.deep} stroke-width="1.2" />
+          <path d={`M${f.x - 6},${f.y + 9} Q${f.x},${f.y - 1} ${f.x + 6},${f.y + 9} Z`} fill={p.bg} />
+        </g>
+      ))
+    }
+
+    <!-- inner arch behind the photo -->
+    <path d="M74,486 L74,250 A126,126 0 0 1 326,250 L326,486 Z" fill={p.deep} stroke={p.accent} stroke-width="3" />
+
+    <!-- lotus at the apex -->
+    <g transform="translate(200 50)" fill={p.accent} stroke={p.deep} stroke-width="2">
+      <path d="M0,-30 Q12,-12 0,6 Q-12,-12 0,-30 Z" />
+      <path d="M-4,4 Q-26,-6 -26,-22 Q-10,-14 -4,4 Z" />
+      <path d="M4,4 Q26,-6 26,-22 Q10,-14 4,4 Z" />
+    </g>
+
+    <!-- plinth -->
+    <rect x="0" y="474" width="400" height="26" fill={p.accent} stroke={p.deep} stroke-width="3" />
+    {Array.from({ length: 20 }, (_, i) => <path d={`M${i * 20 + 10},478 l6,9 l-6,9 l-6,-9 Z`} fill={p.bg} />)}
+  </svg>
+
+  <div class="chalchitra__window">
+    <Photo pandal={pandal} seed={seed} eager={eager} />
+  </div>
+</div>
+
+<style>
+  .chalchitra {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    width: 100%;
+  }
+
+  .chalchitra__art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* arch window: centre (200,250) r=112 → x 88–312, y 138–474 */
+  .chalchitra__window {
+    position: absolute;
+    left: 22%;
+    top: 27.6%;
+    width: 56%;
+    height: 67.2%;
+    overflow: hidden;
+    border-radius: 50% 50% 0 0 / 33.3% 33.3% 0 0;
+    background: var(--deep);
+  }
+</style>

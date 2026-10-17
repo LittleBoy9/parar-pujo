@@ -1,0 +1,1006 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PandalArt from '../components/PandalArt.astro';
+import CreatorChip from '../components/CreatorChip.astro';
+import { pandals } from '../data/pandals';
+import { palettes, type PaletteName } from '../data/palettes';
+import { site, tithis } from '../data/site';
+
+const pujas = pandals.map((p) => ({
+  slug: p.slug,
+  nameBn: p.nameBn,
+  areaBn: p.areaBn,
+  photo: p.photos[0] ?? null,
+  focus: p.focus ? (p.focus.split(' ').map((v) => parseFloat(v) / 100) as [number, number]) : null,
+  palette: p.palette,
+}));
+
+const paletteNames = Object.keys(palettes) as PaletteName[];
+const greetings = ['শুভ শারদীয়া', 'শুভ মহালয়া', 'শুভ ষষ্ঠী', 'শুভ সপ্তমী', 'শুভ মহাষ্টমী', 'শুভ মহানবমী', 'শুভ বিজয়া'];
+const lines = ['', 'এবারের পুজো এখানেই কাটল', 'ঠাকুর দেখা চলছে…', 'অঞ্জলি দিয়ে এলাম 🙏', 'পাড়ার পুজোই সেরা পুজো', 'আসছে বছর আবার হবে'];
+
+// one-tap phrases, each with a look of its own
+const phrases = [
+  { text: 'জয় মা দুর্গা', font: 'galada', color: '#f2b632', effect: 'outline' },
+  { text: 'ঢাকের তালে কোমর দোলে', font: 'baloo', color: '#ffd36b', effect: 'outline' },
+  { text: 'আসছে বছর আবার হবে', font: 'atma', color: '#fffaf0', effect: 'shadow' },
+  { text: 'পুজো মানেই প্রেম ❤️', font: 'galada', color: '#ff8fa3', effect: 'outline' },
+  { text: 'অষ্টমীর অঞ্জলি 🙏', font: 'tiro', color: '#2b1a10', effect: 'pill' },
+  { text: 'বন্ধুদের সাথে পুজো', font: 'mina', color: '#fffaf0', effect: 'shadow' },
+  { text: 'ঠাকুর দেখা চলছে…', font: 'anek', color: '#b3261e', effect: 'pill' },
+  { text: 'প্যান্ডেল হপিং 🚶', font: 'hind', color: '#fffaf0', effect: 'pill' },
+  { text: 'শুভ শারদীয়া', font: 'noto', color: '#f2b632', effect: 'outline' },
+];
+
+const colors = [
+  ['#fffaf0', 'সাদা'],
+  ['#1b120c', 'কালো'],
+  ['#b3261e', 'সিঁদুর'],
+  ['#f2b632', 'হলুদ'],
+  ['#e8731c', 'কমলা'],
+  ['#ff8fa3', 'গোলাপি'],
+  ['#7a1712', 'খয়েরি'],
+  ['#2b3a8a', 'নীল'],
+  ['#2c6e7a', 'গঙ্গা'],
+  ['#3f8f4f', 'সবুজ'],
+];
+
+const tabs = [
+  ['design', 'ডিজাইন'],
+  ['photos', 'ছবি'],
+  ['text', 'লেখা'],
+  ['stickers', 'স্টিকার'],
+  ['puja', 'পুজো'],
+  ['color', 'রং'],
+];
+---
+
+<Layout
+  title="পুজো পরিক্রমার পোস্টার"
+  description="সেলফি, প্যান্ডেলের ছবি, নিজের বাংলা লেখা, স্টিকার — ১৫টা ডিজাইনে নিজের দুর্গাপুজোর পোস্টার বানান, ইনস্টা স্টোরি বা হোয়াটসঅ্যাপ স্ট্যাটাসে দিন। Make your own Durga Puja poster."
+  og="card"
+  ogAlt="পুজো পরিক্রমার পোস্টার — নিজের পুজোর পোস্টার বানান"
+>
+  <section class="poster">
+    <header class="poster__head wrap">
+      <h1 class="section-title">পুজো পরিক্রমার পোস্টার</h1>
+      <div class="poster__by"><CreatorChip /></div>
+      <p class="section-sub">
+        সেলফি তুলুন, প্যান্ডেলের ছবি দিন, নিজের মতো লিখুন — পোস্টার তৈরি!
+        <span class="en">· your photos, your words, your poster</span>
+      </p>
+    </header>
+
+    <form class="studio wrap" data-form>
+      <div class="studio__stage">
+        <div class="studio__canvas">
+          <canvas data-preview aria-label="পোস্টারের প্রিভিউ — আঙুলে টেনে সাজান" width="1080" height="1920"></canvas>
+          <p class="studio__tip" data-tip>👆 টেনে সরান · দু'আঙুলে ছোট-বড়, ঘোরান · লেখায় চাপুন</p>
+        </div>
+      </div>
+
+      <div class="studio__panel">
+        <div class="tabs" role="tablist">
+          {
+            tabs.map(([id, bn]) => (
+              <button type="button" role="tab" data-tab={id} aria-selected="false">
+                {bn}
+              </button>
+            ))
+          }
+        </div>
+
+        <!-- ডিজাইন -->
+        <div class="panel" data-panel="design">
+          <div class="formats">
+            {
+              [
+                ['story', 'স্টোরি / স্ট্যাটাস', 'Insta story · WhatsApp status'],
+                ['post', 'পোস্ট / ছবি', 'Insta post · WhatsApp ছবি'],
+                ['square', 'চৌকো', 'গ্যালারি · ডিপি'],
+              ].map(([id, bn, en]) => (
+                <label class="format">
+                  <input type="radio" name="format" value={id} />
+                  <span>
+                    <i class={`format__shape format__shape--${id}`} />
+                    <b>{bn}</b>
+                    <small>{en}</small>
+                  </span>
+                </label>
+              ))
+            }
+          </div>
+          <div class="thumbs" data-thumbs role="radiogroup" aria-label="ডিজাইন"></div>
+        </div>
+
+        <!-- ছবি -->
+        <div class="panel" data-panel="photos" hidden>
+          <p class="hint">সেলফি, প্যান্ডেল, ঠাকুর — যে ডিজাইনে যতগুলো ছবি লাগে। ছবি আপনার ফোনেই থাকে, কোথাও আপলোড হয় না।</p>
+          <div class="slots" data-slots></div>
+        </div>
+
+        <!-- লেখা -->
+        <div class="panel" data-panel="text" hidden>
+          <div class="editor editor--top" data-text-editor hidden>
+            <textarea data-t-text rows="2" maxlength="120" aria-label="লেখা"></textarea>
+            <span class="editor__label">লেখার ধরন</span>
+            <div class="fonts" data-fonts></div>
+            <span class="editor__label">রং</span>
+            <div class="colors">
+              {colors.map(([c, bn]) => <button type="button" class="color" data-color={c} style={`--c:${c}`} aria-label={bn} />)}
+              <label class="color color--custom" aria-label="নিজের রং">
+                <input type="color" data-t-custom-color />
+              </label>
+            </div>
+            <span class="editor__label" data-layer-only>সাজ</span>
+            <div class="effects" data-layer-only>
+              {
+                [
+                  ['none', 'সাধারণ'],
+                  ['outline', 'বর্ডার'],
+                  ['shadow', 'ছায়া'],
+                  ['pill', 'পেছনে রং'],
+                ].map(([v, bn]) => (
+                  <label class="effect">
+                    <input type="radio" name="effect" value={v} />
+                    <span>{bn}</span>
+                  </label>
+                ))
+              }
+            </div>
+            <label class="range" data-layer-only>মাপ <input type="range" min="24" max="300" step="1" data-t-size /></label>
+            <label class="range" data-layer-only>ঘোরান <input type="range" min="-45" max="45" step="1" data-t-rot /></label>
+            <div class="editor__actions" data-layer-only>
+              <button type="button" class="mini" data-layer-dup>⧉ কপি</button>
+              <button type="button" class="mini mini--danger" data-layer-delete>✕ মুছুন</button>
+            </div>
+            <label class="range" data-design-only hidden>মাপ <input type="range" min="30" max="300" step="1" data-d-scale /></label>
+            <label class="range" data-design-only hidden>ঘোরান <input type="range" min="-45" max="45" step="1" data-d-rot /></label>
+            <p class="editor__note" data-design-only hidden>প্রিভিউতে লেখাটা টেনে সরান, দু'আঙুলে ছোট-বড় করুন বা ঘোরান।</p>
+            <div class="editor__actions" data-design-only hidden>
+              <button type="button" class="mini" data-design-hide>🙈 লুকান</button>
+              <button type="button" class="mini" data-design-reset>⟲ আগের মতো</button>
+            </div>
+          </div>
+
+          <span class="editor__label editor__label--first">এই ডিজাইনের লেখা <small>— চাপ দিয়ে বদলান</small></span>
+          <div class="dtexts" data-design-texts></div>
+          <p class="hint">প্রিভিউতে যেকোনো লেখায় আঙুল ছোঁয়ালেও বদলাতে পারবেন।</p>
+
+          <span class="editor__label">নিজের লেখা যোগ করুন</span>
+          <div class="phrases">
+            {
+              phrases.map((p) => (
+                <button type="button" class="phrase" data-phrase={p.text} data-pfont={p.font} data-pcolor={p.color} data-peffect={p.effect}>
+                  + {p.text}
+                </button>
+              ))
+            }
+          </div>
+          <button type="button" class="btn btn--red add-text" data-add-text>✏️ নিজের লেখা যোগ করুন</button>
+
+        </div>
+
+        <!-- স্টিকার -->
+        <div class="panel" data-panel="stickers" hidden>
+          <div class="editor editor--top" data-sticker-editor hidden>
+            <label class="range">মাপ <input type="range" min="60" max="700" step="1" data-s-size /></label>
+            <label class="range">ঘোরান <input type="range" min="-180" max="180" step="1" data-s-rot /></label>
+            <div class="editor__actions">
+              <button type="button" class="mini" data-layer-dup>⧉ কপি</button>
+              <button type="button" class="mini mini--danger" data-layer-delete>✕ মুছুন</button>
+            </div>
+          </div>
+          <div class="stickers" data-sticker-grid></div>
+        </div>
+
+        <!-- পুজো -->
+        <div class="panel" data-panel="puja" hidden>
+          <span class="editor__label">কোন পুজো?</span>
+          <div class="chips">
+            <label class="chip chip--own">
+              <input type="radio" name="source" value="custom" />
+              <span>✏️ আমার পাড়ার পুজো</span>
+            </label>
+            {
+              pujas.map((p) => (
+                <label class="chip">
+                  <input type="radio" name="source" value={p.slug} />
+                  <span>{p.nameBn}</span>
+                </label>
+              ))
+            }
+          </div>
+          <div class="own" data-own hidden>
+            <input type="text" name="pujaBn" maxlength="40" placeholder="পুজোর নাম — যেমন: নবীন সংঘ সার্বজনীন" />
+            <input type="text" name="areaBn" maxlength="30" placeholder="পাড়া / এলাকা — যেমন: বেহালা" />
+          </div>
+          <span class="editor__label">শুভেচ্ছা আর লাইন</span>
+          <select name="greeting" aria-label="শুভেচ্ছা">
+            {greetings.map((g) => <option>{g}</option>)}
+          </select>
+          <select name="linePreset" aria-label="একটা লাইন">
+            {lines.map((l) => <option value={l}>{l || '— কোনো লাইন নয় —'}</option>)}
+          </select>
+          <input type="text" name="line" maxlength="70" placeholder="অথবা নিজের লাইন লিখুন…" />
+          <div class="pair">
+            <input type="text" name="from" maxlength="30" placeholder="ইতি — আপনার নাম" />
+            <input type="text" name="to" maxlength="30" placeholder="প্রিয় — কাকে? (পোস্টকার্ডে)" />
+          </div>
+        </div>
+
+        <!-- রং -->
+        <div class="panel" data-panel="color" hidden>
+          <span class="editor__label">ডিজাইনের রং</span>
+          <div class="swatches">
+            {
+              paletteNames.map((name) => (
+                <label class="swatch" style={`--a:${palettes[name].bg};--b:${palettes[name].accent}`}>
+                  <input type="radio" name="palette" value={name} />
+                  <span aria-label={name} />
+                </label>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="actionbar">
+      <button class="btn btn--red" type="button" data-share>শেয়ার করুন</button>
+      <button class="btn" type="button" data-save>ফোনে সেভ</button>
+    </div>
+  </section>
+
+  <!-- drawn stand-ins, one per colour, used until there's a photo -->
+  <div hidden>
+    {
+      paletteNames.map((name, i) => (
+        <div data-art={name}>
+          <PandalArt palette={palettes[name]} seed={i} />
+        </div>
+      ))
+    }
+  </div>
+</Layout>
+
+<script define:vars={{ pujas, palettes, tithis, yearBn: site.yearBn }}>
+  window.__CARD__ = { pujas, palettes, tithis, yearBn };
+</script>
+
+<script>
+  import { initEditor, type EditorConfig } from '../scripts/card/editor';
+  initEditor((window as unknown as { __CARD__: EditorConfig }).__CARD__);
+</script>
+
+<style>
+  .poster {
+    padding-top: 28px;
+    padding-bottom: 90px;
+  }
+
+  .studio {
+    display: grid;
+    gap: 18px;
+    margin-top: 20px;
+  }
+
+  .poster__by {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .studio__stage {
+    display: grid;
+    justify-items: center;
+  }
+
+  .studio__canvas {
+    position: relative;
+    max-width: 100%;
+  }
+
+  .studio__stage canvas {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 56vh;
+    max-height: 56svh;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    box-shadow: 4px 4px 0 var(--ink);
+    background: var(--paper-deep);
+    touch-action: none;
+    cursor: grab;
+    transition: max-height 0.2s;
+  }
+
+  /* first-visit tip over the poster; fades by itself */
+  .studio__tip {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    width: max-content;
+    max-width: calc(100% - 20px);
+    margin: 0;
+    padding: 6px 12px;
+    translate: -50% 0;
+    border-radius: 999px;
+    background: rgb(27 18 12 / 0.82);
+    color: #fffaf0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: none;
+    animation: tip 6s 1s both;
+  }
+
+  @keyframes tip {
+    0%,
+    85% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  .tabs {
+    position: sticky;
+    top: 56px;
+    z-index: 5;
+    display: flex;
+    gap: 4px;
+    padding: 6px 0;
+    overflow-x: auto;
+    background: var(--paper);
+    scrollbar-width: none;
+  }
+
+  .tabs button {
+    flex: 1 0 auto;
+    padding: 0.45em 0.9em;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--kash);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .tabs button[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .panel {
+    padding: 14px 0 6px;
+  }
+
+  .hint {
+    margin: 0 0 12px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .editor__label {
+    display: block;
+    margin: 14px 0 8px;
+    font-family: var(--font-sign);
+    font-size: 1.2rem;
+    color: var(--sindoor);
+  }
+
+  .editor__label--first {
+    margin-top: 0;
+  }
+
+  .editor--top {
+    margin: 0 0 18px;
+    border-color: var(--sindoor);
+    box-shadow: 3px 3px 0 var(--sindoor);
+  }
+
+  .editor__label small {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+
+  .editor__note {
+    margin: 12px 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .dtexts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .dtexts :global(.dtext) {
+    padding: 0.3em 0.75em;
+    border: 1.5px dashed var(--ink);
+    border-radius: 8px;
+    background: var(--kash);
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .dtexts :global(.dtext[aria-pressed='true']) {
+    border-style: solid;
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .dtexts :global(.dtext--hidden) {
+    opacity: 0.6;
+  }
+
+  /* formats */
+  .formats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .format input,
+  .chip input,
+  .swatch input,
+  .effect input {
+    position: absolute;
+    opacity: 0;
+  }
+
+  .format span {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    height: 100%;
+    padding: 10px 6px;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    background: var(--kash);
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .format b {
+    font-size: 0.86rem;
+  }
+
+  .format small {
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    line-height: 1.3;
+  }
+
+  .format input:checked + span {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .format input:checked + span small {
+    color: var(--paper-deep);
+  }
+
+  .format__shape {
+    display: block;
+    width: 20px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+  }
+
+  .format__shape--story {
+    height: 36px;
+  }
+
+  .format__shape--post {
+    height: 25px;
+  }
+
+  .format__shape--square {
+    height: 20px;
+  }
+
+  /* design thumbnails */
+  .thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .thumbs :global(.thumb) {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 5px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: none;
+    color: var(--ink);
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .thumbs :global(.thumb canvas) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgb(43 26 16 / 0.22);
+  }
+
+  .thumbs :global(.thumb[aria-checked='true']) {
+    border-color: var(--sindoor);
+    background: var(--kash);
+  }
+
+  /* photo slots */
+  .slots {
+    display: grid;
+    gap: 12px;
+  }
+
+  .slots :global(.slot) {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--kash);
+  }
+
+  .slots :global(.slot__head b) {
+    font-family: var(--font-sign);
+    font-weight: 400;
+    font-size: 1.2rem;
+    color: var(--sindoor);
+  }
+
+  .slots :global(.slot__pickers) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .slots :global(.pickbtn) {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 48px;
+    padding: 8px;
+    border: 2px dashed var(--ink);
+    border-radius: 10px;
+    background: var(--paper);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .slots :global(.pickbtn--selfie) {
+    border-style: solid;
+    background: var(--haldi);
+  }
+
+  .slots :global(.pickbtn input) {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+  }
+
+  .slots :global(.slot__tools),
+  .slots :global(.slot__filters) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .slots :global(.slot__zoom) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 160px;
+  }
+
+  .slots :global(.slot__zoom input) {
+    flex: 1;
+    accent-color: var(--sindoor);
+  }
+
+  :global(.mini) {
+    padding: 0.3em 0.8em;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  :global(.mini[aria-pressed='true']) {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  :global(.mini--danger) {
+    border-color: var(--sindoor);
+    color: var(--sindoor);
+  }
+
+  /* text */
+  .phrases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .phrase {
+    padding: 0.35em 0.8em;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    background: var(--kash);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .add-text {
+    width: 100%;
+    justify-content: center;
+    margin-top: 14px;
+  }
+
+  .editor {
+    margin-top: 16px;
+    padding: 12px;
+    scroll-margin-top: calc(56px + var(--stage-h, 0px) + 64px);
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--kash);
+  }
+
+  .editor textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    font-size: 1.1rem;
+    resize: vertical;
+  }
+
+  .fonts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .fonts :global(.fontchip) {
+    display: grid;
+    justify-items: center;
+    padding: 6px 2px;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .fonts :global(.fontchip span) {
+    font-size: 1.35rem;
+    line-height: 1.3;
+  }
+
+  .fonts :global(.fontchip small) {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.66rem;
+  }
+
+  .fonts :global(.fontchip[aria-pressed='true']) {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .color {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  .color[aria-pressed='true'] {
+    box-shadow:
+      0 0 0 3px var(--kash),
+      0 0 0 5px var(--ink);
+  }
+
+  .color--custom {
+    position: relative;
+    overflow: hidden;
+    background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+    cursor: pointer;
+  }
+
+  .color--custom input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .effects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .effect span {
+    display: inline-block;
+    padding: 0.3em 0.85em;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    background: var(--paper);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .effect input:checked + span {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .range input {
+    flex: 1;
+    accent-color: var(--sindoor);
+  }
+
+  .editor__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  /* stickers */
+  .stickers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .stickers :global(.stickerbtn) {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 6px 2px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--kash);
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .stickers :global(.stickerbtn canvas) {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* puja */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip span {
+    display: inline-block;
+    padding: 0.35em 0.9em;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--kash);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .chip--own span {
+    background: var(--haldi);
+  }
+
+  .chip input:checked + span {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .chip input:focus-visible + span,
+  .format input:focus-visible + span,
+  .swatch input:focus-visible + span,
+  .effect input:focus-visible + span {
+    outline: 3px solid var(--haldi);
+    outline-offset: 2px;
+  }
+
+  .own {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  select,
+  input[type='text'] {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--kash);
+    font: inherit;
+  }
+
+  .pair {
+    display: grid;
+    gap: 0 8px;
+  }
+
+  /* colours */
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .swatch span {
+    display: block;
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%);
+    cursor: pointer;
+  }
+
+  .swatch input:checked + span {
+    box-shadow:
+      0 0 0 3px var(--paper),
+      0 0 0 6px var(--ink);
+  }
+
+  /* always-reachable share bar */
+  .actionbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--paper);
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border-top: 2px solid var(--ink);
+  }
+
+  .actionbar .btn {
+    flex: 1;
+    max-width: 260px;
+    min-height: 46px;
+    justify-content: center;
+  }
+
+  /* phones: keep the poster and the tool tabs pinned while the controls scroll underneath */
+  @media (max-width: 959px) {
+    .poster {
+      padding-top: 10px;
+    }
+
+    .poster__head .section-title {
+      font-size: 1.7rem;
+    }
+
+    .poster__head .section-sub {
+      display: none;
+    }
+
+    .studio {
+      gap: 0;
+      margin-top: 6px;
+    }
+
+    .studio__stage {
+      position: sticky;
+      top: 56px;
+      z-index: 7;
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 6px var(--gutter) 8px;
+      background: var(--paper) var(--grain);
+    }
+
+    .studio__stage canvas {
+      max-height: 42vh;
+      max-height: 42svh;
+    }
+
+    /* while typing, give the keyboard room */
+    .studio.is-typing .studio__stage canvas {
+      max-height: 24vh;
+      max-height: 24svh;
+    }
+
+    .tabs {
+      top: calc(56px + var(--stage-h, 0px));
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 6px var(--gutter);
+      border-bottom: 2px solid var(--ink);
+      background: var(--paper) var(--grain);
+    }
+
+    .tabs button {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 0.4em 0.2em;
+      font-size: 0.9rem;
+    }
+
+    .format span {
+      padding: 8px 4px;
+    }
+
+    .format small {
+      display: none;
+    }
+
+    .actionbar {
+      padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (min-width: 560px) {
+    .pair {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .studio {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      align-items: start;
+    }
+
+    .studio__stage {
+      position: sticky;
+      top: 72px;
+    }
+
+    .studio__stage canvas {
+      /* clear of the top bar and the share bar */
+      max-height: calc(100vh - 72px - 96px);
+    }
+  }
+</style>

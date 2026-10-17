@@ -1,0 +1,259 @@
+---
+// Home-page invite to the poster maker: live sample posters drawn with real pandal photos.
+import { pandals } from '../data/pandals';
+import { palettes } from '../data/palettes';
+import { site, tithis } from '../data/site';
+
+const withPhotos = pandals.filter((p) => p.photos.length);
+const samples = withPhotos.slice(0, 2).map((p) => ({
+  nameBn: p.nameBn,
+  areaBn: p.areaBn,
+  photo: p.photos[0],
+  fy: p.focus ? parseFloat(p.focus.split(' ')[1]) / 100 : 0.5,
+  palette: palettes[p.palette],
+}));
+const features = [
+  ['🤳', 'সেলফি + প্যান্ডেল', 'এক পোস্টারে কয়েকটা ছবি'],
+  ['✍️', 'নিজের বাংলা লেখা', '৮ রকম ফন্ট, যেকোনো রং'],
+  ['🪔', 'স্টিকার', 'ঢাক, প্রদীপ, শিউলি, মায়ের চোখ…'],
+  ['📱', 'স্টোরি · পোস্ট · ডিপি', 'যেখানে খুশি শেয়ার'],
+];
+---
+
+<section class="showcase" aria-labelledby="showcase-title">
+  <div class="wrap showcase__inner">
+    <div class="showcase__head">
+      <p class="showcase__kicker">নতুন ✨</p>
+      <h2 id="showcase-title" class="showcase__title">পুজো পরিক্রমার পোস্টার</h2>
+      <p class="showcase__sub">ঠাকুর দেখতে বেরিয়ে সেলফি তুলুন, প্যান্ডেলের ছবি দিন, নিজের মতো লিখে সাজান — তারপর স্টোরিতে দিন!</p>
+    </div>
+
+    <div class="showcase__body">
+      <ul class="showcase__features">
+        {
+          features.map(([icon, bn, sub]) => (
+            <li>
+              <span aria-hidden="true">{icon}</span>
+              <b>{bn}</b>
+              <small>{sub}</small>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="btn btn--red showcase__cta" href="/card">আমার পোস্টার বানাই →</a>
+    </div>
+
+    <div class="showcase__fan" data-showcase={JSON.stringify({ samples, tithis, yearBn: site.yearBn })} aria-hidden="true">
+      <canvas class="fan__card fan__card--1"></canvas>
+      <canvas class="fan__card fan__card--2"></canvas>
+      <canvas class="fan__card fan__card--3"></canvas>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { loadFonts, loadImage, photoInput, type CardPalette, type Img } from '../scripts/card/kit';
+  import { TEMPLATES, drawCard } from '../scripts/card/templates';
+  import { drawLayers, type Layer } from '../scripts/card/layers';
+  import { pujaToday } from '../scripts/card/greeting';
+
+  interface Sample {
+    nameBn: string;
+    areaBn: string;
+    photo: string;
+    fy: number;
+    palette: CardPalette;
+  }
+
+  const fan = document.querySelector<HTMLElement>('[data-showcase]');
+  if (fan) {
+    // draw only when it scrolls near, so the hero stays quick
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        io.disconnect();
+        void draw(fan);
+      }
+    }, { rootMargin: '300px' });
+    io.observe(fan);
+  }
+
+  async function draw(fan: HTMLElement) {
+    const cfg = JSON.parse(fan.dataset.showcase!) as { samples: Sample[]; tithis: { key: string; dates: string[] }[]; yearBn: string };
+    if (!cfg.samples.length) return;
+    await loadFonts();
+    const imgs: Img[] = await Promise.all(cfg.samples.map((s) => loadImage(s.photo)));
+    const { greeting } = pujaToday(cfg.tithis);
+    const canvases = [...fan.querySelectorAll('canvas')];
+    const plan: { template: string; sample: number; layers: Layer[] }[] = [
+      { template: 'duo', sample: 0, layers: [{ kind: 'sticker', id: 'a', sticker: 'dhak', size: 230, fx: 0.83, fy: 0.08, rot: 12 }] },
+      { template: 'chokh', sample: 1, layers: [{ kind: 'text', id: 'b', text: 'জয় মা দুর্গা', font: 'galada', color: '#f2b632', size: 90, effect: 'outline', fx: 0.5, fy: 0.93, rot: -4 }] },
+      { template: 'parikrama', sample: 0, layers: [{ kind: 'sticker', id: 'c', sticker: 'shiuli', size: 200, fx: 0.86, fy: 0.9, rot: 0 }] },
+    ];
+    plan.forEach((p, i) => {
+      const t = TEMPLATES.find((x) => x.id === p.template)!;
+      const s = cfg.samples[p.sample % cfg.samples.length];
+      const others = cfg.samples.map((x, j) => photoInput(imgs[j], 0.5, x.fy));
+      const photos = [photoInput(imgs[p.sample % imgs.length], 0.5, s.fy), ...others, ...others].slice(0, 4);
+      drawCard(canvases[i], t, 1920, {
+        pujaBn: s.nameBn,
+        areaBn: s.areaBn,
+        greeting,
+        line: '',
+        from: '',
+        to: '',
+        photos,
+        palette: s.palette,
+        site: location.host,
+        yearBn: cfg.yearBn,
+      }, 0.32);
+      drawLayers(canvases[i].getContext('2d')!, 1920, p.layers);
+    });
+    fan.classList.add('is-ready');
+  }
+</script>
+
+<style>
+  .showcase {
+    padding-block: 56px;
+    background:
+      radial-gradient(circle at 85% 30%, rgb(239 177 40 / 0.35), transparent 45%),
+      radial-gradient(circle at 10% 90%, rgb(179 38 30 / 0.18), transparent 50%);
+    border-bottom: 2px solid var(--ink);
+    overflow: hidden;
+  }
+
+  .showcase__inner {
+    display: grid;
+    grid-template-areas: 'head' 'fan' 'body';
+    gap: 20px;
+    align-items: center;
+  }
+
+  .showcase__head {
+    grid-area: head;
+  }
+
+  .showcase__fan {
+    grid-area: fan;
+  }
+
+  .showcase__body {
+    grid-area: body;
+  }
+
+  .showcase__cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .showcase__kicker {
+    display: inline-block;
+    margin: 0;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--kash);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .showcase__title {
+    margin-top: 10px;
+    font-family: var(--font-sign);
+    font-size: clamp(2.4rem, 9vw, 3.8rem);
+    color: var(--sindoor);
+  }
+
+  .showcase__sub {
+    margin: 10px 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+  }
+
+  .showcase__features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 22px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .showcase__features li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 8px;
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--kash);
+  }
+
+  .showcase__features span {
+    grid-row: span 2;
+    font-size: 1.5rem;
+  }
+
+  .showcase__features b {
+    font-size: 0.95rem;
+  }
+
+  .showcase__features small {
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+
+  .showcase__cta {
+    margin-top: 22px;
+    font-size: 1.1rem;
+  }
+
+  /* three posters fanned like cards in a hand */
+  .showcase__fan {
+    position: relative;
+    height: min(100vw, 500px);
+  }
+
+  .fan__card {
+    position: absolute;
+    top: 6%;
+    left: 50%;
+    width: min(48vw, 230px);
+    aspect-ratio: 9 / 16;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--paper-deep);
+    box-shadow: 6px 8px 0 rgb(43 26 16 / 0.85);
+    transition: transform 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
+  }
+
+  .fan__card--1 {
+    transform: translateX(-112%) rotate(-12deg);
+  }
+
+  .fan__card--2 {
+    z-index: 2;
+    transform: translateX(-50%) translateY(-4%);
+  }
+
+  .fan__card--3 {
+    transform: translateX(12%) rotate(12deg);
+  }
+
+  .showcase__fan:not(.is-ready) .fan__card {
+    transform: translateX(-50%) rotate(0);
+  }
+
+  @media (min-width: 900px) {
+    .showcase__inner {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas: 'head fan' 'body fan';
+      column-gap: 48px;
+    }
+
+    .showcase__cta {
+      width: auto;
+    }
+  }
+</style>

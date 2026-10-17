@@ -1,0 +1,196 @@
+@import '@fontsource/galada/400.css';
+@import '@fontsource/tiro-bangla/400.css';
+@import '@fontsource/tiro-bangla/400-italic.css';
+@import '@fontsource/hind-siliguri/400.css';
+@import '@fontsource/hind-siliguri/600.css';
+
+/*
+ * Hind Siliguri draws the Bengali digit ১ noticeably smaller than its other digits.
+ * These faces cover ONLY the ten Bengali digits (০–৯) with Anek Bangla, which has evenly
+ * sized numerals in a matching style; every other character still comes from Hind.
+ */
+@font-face {
+  font-family: 'Bn Digits';
+  src: url('../../node_modules/@fontsource/anek-bangla/files/anek-bangla-bengali-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+09E6-09EF;
+}
+
+@font-face {
+  font-family: 'Bn Digits';
+  src: url('../../node_modules/@fontsource/anek-bangla/files/anek-bangla-bengali-600-normal.woff2') format('woff2');
+  font-weight: 500 700;
+  font-display: swap;
+  unicode-range: U+09E6-09EF;
+}
+
+:root {
+  --paper: #f8eedb;
+  --paper-deep: #efdfc2;
+  --ink: #2b1a10;
+  --ink-soft: #6b5442;
+  --sindoor: #b3261e;
+  --haldi: #efb128;
+  --kash: #fffaf0;
+  --shiuli-stem: #e8731c;
+  --ganga: #2c6e7a;
+
+  --font-sign: 'Galada', 'Tiro Bangla', serif; /* hand-painted signboard lettering */
+  --font-serif: 'Tiro Bangla', Georgia, serif; /* old book / pujabarshiki type */
+  --font-ui: 'Bn Digits', 'Hind Siliguri', system-ui, sans-serif; /* digits from Anek, see above */
+
+  --gutter: clamp(16px, 4vw, 40px);
+  /* aged paper grain, drawn with SVG noise so there's no image to download */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --max: 1120px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: var(--grain);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* `hidden` must win over any component's display rule */
+[hidden] {
+  display: none !important;
+}
+
+/* jump links land below the sticky top bar */
+[id] {
+  scroll-margin-top: 72px;
+}
+
+/* decorative blobs and tilted frames may poke out; never let them widen the page */
+main {
+  overflow-x: clip;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.en {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.section-title {
+  font-family: var(--font-sign);
+  font-size: clamp(2.2rem, 7vw, 3.6rem);
+  color: var(--sindoor);
+  text-align: center;
+}
+
+.section-sub {
+  text-align: center;
+  margin: 0.25rem 0 0;
+}
+
+/* lal-paar sari border — the red-on-white edge used as a section divider */
+.lalpaar {
+  height: 22px;
+  background:
+    radial-gradient(circle at 11px 11px, var(--haldi) 3px, transparent 3.5px) 0 0 / 22px 22px,
+    linear-gradient(var(--sindoor), var(--sindoor)) 0 4px / 100% 14px no-repeat,
+    linear-gradient(var(--kash), var(--kash));
+  border-block: 2px solid var(--sindoor);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.6em 1.15em;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--kash);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn--red {
+  background: var(--sindoor);
+  color: var(--kash);
+}
+
+.btn--yellow {
+  background: var(--haldi);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

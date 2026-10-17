@@ -1,0 +1,152 @@
+---
+// ঢাক button — plays a real Durga Puja dhak recording (see scripts/dhak.ts for credit).
+// With `autostart`, the dhak begins on the visitor's first touch anywhere on the page
+// (browsers never allow sound before that), unless they've switched it off before.
+interface Props {
+  autostart?: boolean;
+}
+
+const { autostart = false } = Astro.props;
+---
+
+<button class="dhak" type="button" aria-pressed="false" aria-label="ঢাক — চালু / বন্ধ" data-dhak data-autostart={autostart ? '1' : undefined}>
+  <svg viewBox="0 0 64 64" aria-hidden="true" class="dhak__icon">
+    <!-- kash-feather plume -->
+    <g class="dhak__plume" fill="#fffaf0" stroke="#2b1a10" stroke-width="1.5">
+      <path d="M22 18 C14 4 24 2 26 16" />
+      <path d="M30 16 C28 0 38 0 34 16" />
+      <path d="M38 17 C44 4 52 8 42 19" />
+    </g>
+    <!-- drum body -->
+    <ellipse cx="32" cy="40" rx="24" ry="17" fill="#b3261e" stroke="#2b1a10" stroke-width="2.5" />
+    <path d="M10 34 Q32 46 54 34 M10 46 Q32 58 54 46" fill="none" stroke="#efb128" stroke-width="3" />
+    <path d="M16 27 L20 53 M26 24 L28 57 M38 24 L36 57 M48 27 L44 53" stroke="#2b1a10" stroke-width="1.2" opacity=".5" />
+    <ellipse cx="9" cy="40" rx="4" ry="12" fill="#f1dcc0" stroke="#2b1a10" stroke-width="2" />
+  </svg>
+  <span class="dhak__label">ঢাক</span>
+</button>
+
+<style>
+  .dhak {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    border: 2.5px solid var(--ink);
+    border-radius: 50%;
+    background: var(--haldi);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .dhak__icon {
+    width: 46px;
+    height: 46px;
+    margin-top: -6px;
+  }
+
+  .dhak__label {
+    position: absolute;
+    bottom: 4px;
+    font-family: var(--font-sign);
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  .dhak[aria-busy='true'] .dhak__icon {
+    animation: thump 0.6s infinite;
+    opacity: 0.6;
+  }
+
+  .dhak[aria-pressed='true'] {
+    background: var(--sindoor);
+    color: var(--kash);
+  }
+
+  .dhak[aria-pressed='true'] .dhak__icon {
+    animation: thump 0.43s infinite;
+  }
+
+  .dhak[aria-pressed='true'] .dhak__plume {
+    animation: sway 0.86s ease-in-out infinite;
+    transform-origin: 32px 18px;
+  }
+
+  @keyframes thump {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.12) rotate(-4deg); }
+  }
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-8deg); }
+    50% { transform: rotate(8deg); }
+  }
+</style>
+
+<script>
+  import { DhakPlayer } from '../scripts/dhak';
+
+  const OFF_KEY = 'parar-pujo:dhak-off';
+  const btn = document.querySelector<HTMLButtonElement>('[data-dhak]');
+  const player = new DhakPlayer();
+  const read = (k: string) => {
+    try {
+      return localStorage.getItem(k);
+    } catch {
+      return null;
+    }
+  };
+  const write = (k: string, v: string | null) => {
+    try {
+      if (v === null) localStorage.removeItem(k);
+      else localStorage.setItem(k, v);
+    } catch {
+      // storage blocked — preference just isn't remembered
+    }
+  };
+
+  const paint = (on: boolean) => {
+    btn?.setAttribute('aria-pressed', String(on));
+    document.dispatchEvent(new CustomEvent('dhak:change', { detail: on }));
+  };
+
+  async function toggle() {
+    btn?.setAttribute('aria-busy', 'true');
+    try {
+      paint(await player.toggle());
+    } catch {
+      paint(false);
+    } finally {
+      btn?.removeAttribute('aria-busy');
+    }
+  }
+
+  btn?.addEventListener('click', async () => {
+    disarm();
+    await toggle();
+    // remember a deliberate "off" so it doesn't start by itself next time
+    write(OFF_KEY, player.playing ? null : '1');
+  });
+
+  // Autostart: the first touch / key anywhere starts the dhak (browsers require that gesture).
+  const gestures = ['pointerup', 'touchend', 'keydown'] as const;
+  const onFirstGesture = (e: Event) => {
+    if (btn && e.target instanceof Node && btn.contains(e.target)) return; // the button handles itself
+    disarm();
+    if (!player.playing) void toggle();
+  };
+  function disarm() {
+    gestures.forEach((g) => window.removeEventListener(g, onFirstGesture, true));
+  }
+  if (btn?.dataset.autostart && !read(OFF_KEY)) {
+    gestures.forEach((g) => window.addEventListener(g, onFirstGesture, { capture: true }));
+    // fetch the recording while the page settles, so that first touch starts it instantly
+    const warm = () => void player.preload();
+    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 3000 });
+    else setTimeout(warm, 1500);
+  }
+
+  document.addEventListener('visibilitychange', () => player.setHidden(document.hidden));
+</script>

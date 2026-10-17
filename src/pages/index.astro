@@ -1,0 +1,110 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import PosterShowcase from '../components/PosterShowcase.astro';
+import DesignGallery from '../components/DesignGallery.astro';
+import TithiStrip from '../components/TithiStrip.astro';
+import StoryRing from '../components/StoryRing.astro';
+import PujaDirectory from '../components/PujaDirectory.astro';
+import CreatorCard from '../components/CreatorCard.astro';
+import { site } from '../data/site';
+
+---
+
+<Layout>
+  <Hero />
+  <!-- latest stories first, Instagram-style -->
+  <div class="wrap top-stories">
+    <StoryRing />
+  </div>
+  <PosterShowcase />
+  <DesignGallery />
+  <TithiStrip />
+
+  <div class="lalpaar" aria-hidden="true"></div>
+
+  <PujaDirectory />
+
+  <CreatorCard />
+
+  <!-- our own para, kept but not shouted about -->
+  <section class="wrap local">
+    <a class="local__card" href="/para">
+      <span class="local__pin" aria-hidden="true">📍</span>
+      <span>
+        <b>আমাদের পাড়ার ঠাকুর দেখা</b>
+        <span>{site.areaBn} — রুট ম্যাপ আর ঠাকুর দেখা পাসপোর্ট <span class="en">· our own para's guide</span></span>
+      </span>
+      <span class="local__go" aria-hidden="true">→</span>
+    </a>
+  </section>
+
+  <section class="wrap final">
+    <p class="final__line">এবার আপনার পালা</p>
+    <a class="btn btn--red final__cta" href="/card">✨ নিজের পুজোর পোস্টার বানান</a>
+  </section>
+</Layout>
+
+<style>
+  .top-stories {
+    padding-top: 8px;
+    border-bottom: 2px dashed rgb(43 26 16 / 0.18);
+  }
+
+  .local {
+    padding-top: 24px;
+  }
+
+  .local__card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 640px;
+    margin-inline: auto;
+    padding: 16px 20px;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    background: var(--kash);
+    box-shadow: 4px 4px 0 var(--ink);
+    text-decoration: none;
+  }
+
+  .local__card b {
+    display: block;
+    font-family: var(--font-sign);
+    font-weight: 400;
+    font-size: 1.5rem;
+    color: var(--sindoor);
+  }
+
+  .local__card span span {
+    font-size: 0.9rem;
+  }
+
+  .local__pin {
+    font-size: 1.8rem;
+  }
+
+  .local__go {
+    margin-left: auto;
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+
+  .final {
+    padding-block: 64px 8px;
+    text-align: center;
+  }
+
+  .final__line {
+    margin: 0 0 14px;
+    font-family: var(--font-sign);
+    font-size: clamp(2rem, 8vw, 3rem);
+    color: var(--ink);
+  }
+
+  .final__cta {
+    font-size: 1.15rem;
+    padding: 0.7em 1.4em;
+  }
+</style>

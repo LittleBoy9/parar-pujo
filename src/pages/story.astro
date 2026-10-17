@@ -1,0 +1,531 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { pandals } from '../data/pandals';
+import { palettes } from '../data/palettes';
+import { site, tithis } from '../data/site';
+
+const storyPandals = pandals.map((p) => ({ slug: p.slug, nameBn: p.nameBn, areaBn: p.areaBn, palette: palettes[p.palette] }));
+const frames = [
+  { id: '', bn: 'ফ্রেম ছাড়া' },
+  { id: 'chalchitra', bn: 'চালচিত্র' },
+  { id: 'album', bn: 'অ্যালবাম' },
+  { id: 'alpona', bn: 'আলপনা' },
+  { id: 'marquee', bn: 'সিনেমা বোর্ড' },
+];
+---
+
+<Layout
+  title="স্টোরিতে ছবি দিন"
+  description="প্যান্ডেলের সামনে সেলফি, বন্ধুদের সাথে আড্ডা, ঠাকুর — পাড়ার স্টোরিতে দিন, ২৪ ঘণ্টা সবাই দেখবে। Share your Durga Puja selfie as a Parar Pujo story."
+  og="story"
+  ogAlt="পাড়ার স্টোরিতে ছবি দিন — পাড়ার পুজো"
+>
+  <section class="up wrap">
+    <h1 class="section-title">পাড়ার স্টোরিতে ছবি দিন</h1>
+    <p class="section-sub">
+      প্যান্ডেলের সামনে সেলফি, বন্ধুদের সাথে আড্ডা, ঠাকুর, ভোগ, ধুনুচি নাচ — যা খুশি!
+      <span class="en">· selfies, friends, the protima — anything from today</span>
+    </p>
+
+    <form class="up__form" data-up-form novalidate>
+      <fieldset>
+        <legend>১. কোন ঠাকুরের ওখানে?</legend>
+        <div class="chips" data-puja-chips>
+          {
+            storyPandals.map((p) => (
+              <label class="chip" style={`--c:${p.palette.bg}`}>
+                <input type="radio" name="pandal" value={p.slug} required />
+                <span>{p.nameBn}</span>
+              </label>
+            ))
+          }
+          <label class="chip chip--other" data-other-chip>
+            <input type="radio" name="pandal" value="other" />
+            <span>✏️ অন্য পুজো</span>
+          </label>
+        </div>
+        <div class="other" data-other hidden>
+          <input type="text" name="pujaName" maxlength="40" placeholder="পুজোর নাম — যেমন: নবীন সংঘ সার্বজনীন" />
+          <input type="text" name="pujaArea" maxlength="40" placeholder="কোথায় — পাড়া / এলাকা, যেমন: বেহালা" />
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>২. ছবি</legend>
+        <div class="sources">
+          <label class="source source--selfie">
+            <input type="file" accept="image/*" capture="user" data-photo-input />
+            <span>🤳 সেলফি তুলুন</span>
+          </label>
+          <label class="source">
+            <input type="file" accept="image/*" data-photo-input />
+            <span>🖼️ গ্যালারি থেকে</span>
+          </label>
+        </div>
+
+        <div class="stage" data-stage hidden>
+          <img class="stage__img" data-preview alt="আপনার ছবি" />
+          <canvas class="stage__canvas" data-framed hidden aria-label="ফ্রেম সহ ছবি"></canvas>
+        </div>
+
+        <div class="frames" data-frames hidden>
+          <span class="frames__label">পুজোর ফ্রেম লাগাবেন?</span>
+          <div class="chips">
+            {
+              frames.map((f, i) => (
+                <label class="chip chip--small">
+                  <input type="radio" name="frame" value={f.id} checked={i === 0} />
+                  <span>{f.bn}</span>
+                </label>
+              ))
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>৩. দু'কথা <span class="en">(optional)</span></legend>
+        <input type="text" name="caption" maxlength="80" placeholder="যেমন: বন্ধুদের সাথে সপ্তমীর সন্ধে!" />
+        <input type="text" name="author" maxlength="30" placeholder="আপনার নাম (ইচ্ছে হলে)" />
+      </fieldset>
+
+      <label class="consent">
+        <input type="checkbox" name="consent" value="yes" required />
+        <span>ছবিটা আমার তোলা। ছবিতে যাঁদের দেখা যাচ্ছে, তাঁদের আপত্তি নেই।</span>
+      </label>
+
+      <ul class="rules">
+        <li>অনুমোদন পেলে তবেই ছবি সবাই দেখতে পাবে।</li>
+        <li>২৪ ঘণ্টা পর ছবি নিজে থেকেই মুছে যাবে।</li>
+        <li>ছবির লোকেশন (GPS) তথ্য মুছে দেওয়া হয়।</li>
+      </ul>
+
+      <p class="up__error" data-up-error role="alert" hidden></p>
+
+      <button class="btn btn--red up__go" type="submit" data-up-go>
+        <span data-up-label>পাঠিয়ে দিন</span>
+        <span class="up__bar" aria-hidden="true"><i data-up-bar></i></span>
+      </button>
+    </form>
+
+    <div class="done" data-up-done hidden>
+      <p class="done__big">পাঠানো হয়েছে! 🙏</p>
+      <p>অনুমোদন পেলেই পাড়ার স্টোরিতে দেখা যাবে — সাধারণত কিছুক্ষণের মধ্যে।</p>
+      <p class="en">Sent! It'll show up once it's approved.</p>
+      <div class="done__actions">
+        <button class="btn btn--yellow" type="button" data-up-again>আরেকটা ছবি দিন</button>
+        <a class="btn" href="/">স্টোরি দেখুন</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ storyPandals, tithis, yearBn: site.yearBn }}>
+  window.__STORY__ = { storyPandals, tithis, yearBn };
+</script>
+
+<script>
+  import { COMMUNITY_COLORS, getPujas, uploadStory } from '../scripts/api';
+  import { compressPhoto, type Compressed } from '../scripts/compress';
+  import { FORMATS, loadFonts, loadImage, photoInput, type CardPalette } from '../scripts/card/kit';
+  import { TEMPLATES, drawCard } from '../scripts/card/templates';
+  import { pujaToday } from '../scripts/card/greeting';
+
+  const { storyPandals, tithis, yearBn } = (window as unknown as {
+    __STORY__: { storyPandals: { slug: string; nameBn: string; areaBn: string; palette: CardPalette }[]; tithis: { key: string; dates: string[] }[]; yearBn: string };
+  }).__STORY__;
+
+  const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
+  const form = $<HTMLFormElement>('[data-up-form]');
+  const stage = $('[data-stage]');
+  const preview = $<HTMLImageElement>('[data-preview]');
+  const framed = $<HTMLCanvasElement>('[data-framed]');
+  const framesBox = $('[data-frames]');
+  const errorBox = $('[data-up-error]');
+  const go = $<HTMLButtonElement>('[data-up-go]');
+  const label = $('[data-up-label]');
+  const bar = $('[data-up-bar]');
+  const done = $('[data-up-done]');
+  const { greeting } = pujaToday(tithis);
+  let photo: Compressed | null = null;
+  let photoImg: HTMLImageElement | null = null;
+  const fontsReady = loadFonts().catch(() => {});
+
+  // Visitor-submitted pujas join the list, then a ?pandal= link preselects its puja
+  const pre = new URLSearchParams(location.search).get('pandal');
+  void getPujas().then((pujas) => {
+    const box = $('[data-puja-chips]');
+    (pujas ?? []).forEach((p, i) => {
+      const label = document.createElement('label');
+      label.className = 'chip';
+      label.style.setProperty('--c', COMMUNITY_COLORS[i % COMMUNITY_COLORS.length]);
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'pandal';
+      input.value = p.id;
+      const span = document.createElement('span');
+      span.textContent = `${p.nameBn} · ${p.areaBn}`;
+      label.append(input, span);
+      box.insertBefore(label, $('[data-other-chip]')); // "অন্য পুজো" stays last
+    });
+    form.querySelector<HTMLInputElement>(`input[name="pandal"][value="${CSS.escape(pre ?? '')}"]`)?.click();
+  });
+
+  const showError = (msg: string) => {
+    errorBox.textContent = msg;
+    errorBox.hidden = false;
+    errorBox.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+
+  const frameId = () => String(new FormData(form).get('frame') ?? '');
+
+  async function renderFrame() {
+    const id = frameId();
+    const template = TEMPLATES.find((t) => t.id === id);
+    framed.hidden = !template;
+    preview.hidden = Boolean(template);
+    if (!template || !photoImg) return;
+    await fontsReady;
+    const fd = new FormData(form);
+    const chosen = String(fd.get('pandal') ?? '');
+    const isOther = chosen === 'other';
+    const community = (await getPujas())?.find((x) => x.id === chosen);
+    const p = isOther
+      ? { slug: 'other', nameBn: String(fd.get('pujaName') || '').trim() || 'আমাদের পাড়ার পুজো', areaBn: String(fd.get('pujaArea') || '').trim(), palette: storyPandals[0].palette }
+      : community
+        ? { slug: community.id, nameBn: community.nameBn, areaBn: community.areaBn, palette: storyPandals[0].palette }
+        : (storyPandals.find((x) => x.slug === chosen) ?? storyPandals[0]);
+    drawCard(framed, template, FORMATS.story.h, {
+      pujaBn: p.nameBn,
+      areaBn: p.areaBn,
+      greeting,
+      line: '', // the caption is shown under the story anyway
+      from: '',
+      to: '',
+      photos: [photoInput(photoImg, 0.5, 0.4)],
+      palette: p.palette,
+      site: location.host,
+      yearBn,
+    });
+  }
+
+  document.querySelectorAll<HTMLInputElement>('[data-photo-input]').forEach((input) =>
+    input.addEventListener('change', async () => {
+      const file = input.files?.[0];
+      input.value = ''; // allow picking the same file again
+      errorBox.hidden = true;
+      if (!file) return;
+      try {
+        if (photo) URL.revokeObjectURL(photo.previewUrl);
+        photo = await compressPhoto(file);
+        photoImg = await loadImage(photo.previewUrl);
+        preview.src = photo.previewUrl;
+        stage.hidden = false;
+        framesBox.hidden = false;
+        await renderFrame();
+      } catch {
+        photo = null;
+        photoImg = null;
+        showError('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।');
+      }
+    }),
+  );
+
+  form.addEventListener('input', (e) => {
+    const name = (e.target as HTMLInputElement).name;
+    if (name === 'pandal') {
+      const other = $('[data-other]');
+      other.hidden = (e.target as HTMLInputElement).value !== 'other';
+      if (!other.hidden) other.querySelector<HTMLInputElement>('input')?.focus();
+    }
+    if (name === 'frame' || name === 'pandal' || name === 'pujaName' || name === 'pujaArea') void renderFrame();
+  });
+
+  /** The framed canvas as a JPEG small enough for the upload limit. */
+  async function framedBlob(): Promise<Blob> {
+    for (const q of [0.86, 0.76, 0.66, 0.56]) {
+      const blob = await new Promise<Blob | null>((r) => framed.toBlob(r, 'image/jpeg', q));
+      if (blob && blob.size <= 850 * 1024) return blob;
+    }
+    throw new Error('ছবিটা খুব বড় হয়ে যাচ্ছে — ফ্রেম ছাড়া দিন।');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.hidden = true;
+    const fd = new FormData(form);
+    if (!fd.get('pandal')) return showError('কোন ঠাকুরের ওখানে, সেটা বাছুন।');
+    if (fd.get('pandal') === 'other') {
+      if (!String(fd.get('pujaName') || '').trim()) return showError('পুজোর নামটা লিখুন।');
+      if (!String(fd.get('pujaArea') || '').trim()) return showError('পুজোটা কোথায়, লিখুন।');
+    }
+    if (!photo) return showError('একটা ছবি বা সেলফি দিন।');
+    if (fd.get('consent') !== 'yes') return showError('সম্মতিতে টিক দিন।');
+
+    go.disabled = true;
+    label.textContent = 'পাঠানো হচ্ছে…';
+    try {
+      await renderFrame();
+      const blob = frameId() ? await framedBlob() : photo.blob;
+      const body = new FormData();
+      body.set('pandal', String(fd.get('pandal')));
+      body.set('pujaName', String(fd.get('pujaName') ?? ''));
+      body.set('pujaArea', String(fd.get('pujaArea') ?? ''));
+      body.set('caption', String(fd.get('caption') ?? ''));
+      body.set('author', String(fd.get('author') ?? ''));
+      body.set('consent', 'yes');
+      body.set('photo', blob, 'story.jpg');
+      await uploadStory(body, (f) => (bar.style.width = `${Math.round(f * 100)}%`));
+      form.hidden = true;
+      done.hidden = false;
+      done.scrollIntoView({ block: 'center' });
+    } catch (err) {
+      showError((err as Error).message);
+    } finally {
+      go.disabled = false;
+      label.textContent = 'পাঠিয়ে দিন';
+      bar.style.width = '0';
+    }
+  });
+
+  $('[data-up-again]').addEventListener('click', () => {
+    if (photo) URL.revokeObjectURL(photo.previewUrl);
+    photo = null;
+    photoImg = null;
+    stage.hidden = true;
+    framesBox.hidden = true;
+    (form.elements.namedItem('caption') as HTMLInputElement).value = '';
+    done.hidden = true;
+    form.hidden = false;
+  });
+</script>
+
+<style>
+  .up {
+    max-width: 640px;
+    padding-top: 40px;
+  }
+
+  .up__form {
+    margin-top: 28px;
+  }
+
+  fieldset {
+    margin: 0 0 22px;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    margin-bottom: 10px;
+    font-family: var(--font-sign);
+    font-size: 1.5rem;
+    color: var(--sindoor);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip input {
+    position: absolute;
+    opacity: 0;
+  }
+
+  .chip span {
+    display: inline-block;
+    padding: 0.35em 0.9em;
+    border: 2px solid var(--ink);
+    border-left: 8px solid var(--c, var(--ink));
+    border-radius: 999px;
+    background: var(--kash);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .chip--other span {
+    border-left-width: 2px;
+    border-style: dashed;
+    background: var(--haldi);
+  }
+
+  .other {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .chip--small span {
+    padding: 0.25em 0.8em;
+    border-left-width: 2px;
+    font-size: 0.9rem;
+  }
+
+  .chip input:checked + span {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .chip input:focus-visible + span,
+  .source input:focus-visible + span {
+    outline: 3px solid var(--haldi);
+    outline-offset: 2px;
+  }
+
+  .sources {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .source input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+  }
+
+  .source span {
+    display: grid;
+    place-items: center;
+    min-height: 84px;
+    padding: 12px;
+    border: 2.5px dashed var(--ink);
+    border-radius: 14px;
+    background: var(--kash);
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .source--selfie span {
+    border-style: solid;
+    background: var(--haldi);
+  }
+
+  .stage {
+    display: grid;
+    place-items: center;
+    margin-top: 14px;
+  }
+
+  .stage__img,
+  .stage__canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 60vh;
+    max-height: 60svh;
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0 var(--ink);
+    border: 2px solid var(--ink);
+  }
+
+  .frames {
+    margin-top: 14px;
+  }
+
+  .frames__label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  input[type='text'] {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--kash);
+    font: inherit;
+  }
+
+  .consent {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-weight: 600;
+  }
+
+  .consent input {
+    width: 22px;
+    height: 22px;
+    margin-top: 3px;
+    flex: none;
+    accent-color: var(--sindoor);
+  }
+
+  .rules {
+    margin: 14px 0 0;
+    padding-left: 1.2em;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .up__error {
+    margin: 16px 0 0;
+    padding: 10px 14px;
+    border-left: 5px solid var(--sindoor);
+    background: #fbe3dc;
+    font-weight: 600;
+  }
+
+  .up__go {
+    position: relative;
+    width: 100%;
+    margin-top: 20px;
+    justify-content: center;
+    font-size: 1.15rem;
+    overflow: hidden;
+  }
+
+  .up__go:disabled {
+    opacity: 0.8;
+  }
+
+  .up__bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+  }
+
+  .up__bar i {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--haldi);
+    transition: width 0.2s;
+  }
+
+  .done {
+    margin-top: 32px;
+    padding: 28px 22px;
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    background: var(--kash);
+    box-shadow: 5px 5px 0 var(--ink);
+    text-align: center;
+  }
+
+  .done__big {
+    margin: 0;
+    font-family: var(--font-sign);
+    font-size: 2.4rem;
+    color: var(--sindoor);
+  }
+
+  .done__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 18px;
+  }
+</style>

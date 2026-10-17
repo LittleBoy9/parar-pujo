@@ -1,0 +1,525 @@
+---
+// Approvers' page. Not linked anywhere; useless without a key from ADMIN_KEYS.
+import Layout from '../layouts/Layout.astro';
+import { pandals } from '../data/pandals';
+
+const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
+---
+
+<Layout title="অনুমোদন" noindex>
+  <section class="adm wrap">
+    <h1 class="section-title">অনুমোদন</h1>
+
+    <form class="adm__login" data-login hidden>
+      <label for="adm-key">আপনার চাবি (key)</label>
+      <input id="adm-key" name="key" type="password" autocomplete="current-password" required />
+      <button class="btn btn--red" type="submit">ঢুকুন</button>
+      <p class="adm__msg" data-login-msg role="alert"></p>
+    </form>
+
+    <div data-panel hidden>
+      <div class="adm__bar">
+        <span data-you></span>
+        <button class="adm__link" type="button" data-refresh>↻ রিফ্রেশ</button>
+        <button class="adm__link" type="button" data-logout>বেরোন</button>
+      </div>
+
+      <div class="tg" data-tg hidden></div>
+
+      <nav class="adm__tabs" role="tablist">
+        <button role="tab" data-tab="hidden">রিপোর্ট <b data-count="hidden">০</b></button>
+        <button role="tab" data-tab="pending">স্টোরি <b data-count="pending">০</b></button>
+        <button role="tab" data-tab="pujas">নতুন পুজো <b data-count="pujas">০</b></button>
+        <button role="tab" data-tab="live">লাইভ <b data-count="live">০</b></button>
+      </nav>
+
+      <p class="adm__hint" data-hint></p>
+      <ul class="adm__list" data-list></ul>
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ names }}>
+  window.__PANDAL_NAMES__ = names;
+</script>
+
+<script>
+  import { timeAgo } from '../scripts/api';
+  import { toBnDigits } from '../lib/bangla';
+
+  interface Story {
+    kind: 'stories';
+    id: string;
+    pandal: string;
+    pandalName?: string | null;
+    url: string;
+    caption: string | null;
+    author: string | null;
+    status: 'pending' | 'hidden' | 'live';
+    reports: number;
+    createdAt: number;
+    reviewedBy: string | null;
+  }
+  interface Puja {
+    kind: 'pujas';
+    id: string;
+    nameBn: string;
+    nameEn: string | null;
+    areaBn: string;
+    themeBn: string | null;
+    mapUrl: string | null;
+    submitter: string | null;
+    url: string;
+    status: 'pending' | 'live';
+    createdAt: number;
+    reviewedBy: string | null;
+  }
+  type Item = Story | Puja;
+  type Tab = 'hidden' | 'pending' | 'pujas' | 'live';
+
+  const KEY = 'parar-pujo:admin-key';
+  const names = (window as unknown as { __PANDAL_NAMES__: Record<string, string> }).__PANDAL_NAMES__;
+  const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
+  const login = $<HTMLFormElement>('[data-login]');
+  const panel = $('[data-panel]');
+  const list = $<HTMLUListElement>('[data-list]');
+  const tgBox = $('[data-tg]');
+  let items: Item[] = [];
+  let tab: Tab = 'pending';
+
+  const store = {
+    get: (k: string, s: Storage = localStorage) => {
+      try {
+        return s.getItem(k);
+      } catch {
+        return null;
+      }
+    },
+    set: (k: string, v: string, s: Storage = localStorage) => {
+      try {
+        s.setItem(k, v);
+      } catch {
+        // storage blocked
+      }
+    },
+    del: (k: string) => {
+      try {
+        localStorage.removeItem(k);
+      } catch {
+        // storage blocked
+      }
+    },
+  };
+
+  async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const res = await fetch(path, { ...init, headers: { ...init.headers, authorization: `Bearer ${store.get(KEY)}` } });
+    const body = await res.json().catch(() => null);
+    if (res.status === 401) {
+      showLogin('চাবি ভুল, আবার দিন।');
+      throw new Error('unauthorized');
+    }
+    if (!res.ok) throw new Error(body?.message ?? 'গোলমাল হয়েছে');
+    return body as T;
+  }
+
+  function showLogin(msg = '') {
+    store.del(KEY);
+    panel.hidden = true;
+    login.hidden = false;
+    $('[data-login-msg]').textContent = msg;
+  }
+
+  const inTab = (i: Item, t: Tab) => (t === 'pujas' ? i.kind === 'pujas' : i.kind === 'stories' && i.status === t);
+
+  async function load() {
+    const data = await api<{ you: string; telegram: { tokenSet: boolean; connected: boolean }; stories: Omit<Story, 'kind'>[]; pujas: Omit<Puja, 'kind'>[] }>(
+      '/api/admin/queue',
+    );
+    items = [...data.stories.map((s) => ({ ...s, kind: 'stories' as const })), ...data.pujas.map((p) => ({ ...p, kind: 'pujas' as const }))];
+    login.hidden = true;
+    panel.hidden = false;
+    $('[data-you]').textContent = `নমস্কার, ${data.you}`;
+    renderTelegram(data.telegram);
+    render();
+  }
+
+  // ---------- Telegram pairing ----------
+  function renderTelegram(t: { tokenSet: boolean; connected: boolean }) {
+    tgBox.hidden = false;
+    tgBox.replaceChildren();
+    const p = document.createElement('p');
+    if (!t.tokenSet) {
+      p.textContent = 'ফোনে টেলিগ্রামে ছবি পেতে চাইলে TELEGRAM_BOT_TOKEN সেট করুন (README দেখুন)।';
+      tgBox.append(p);
+      tgBox.dataset.state = 'off';
+      return;
+    }
+    if (t.connected && !tgBox.dataset.repair) {
+      p.textContent = '✓ টেলিগ্রাম চালু — নতুন ছবি সরাসরি ফোনে আসবে, ওখান থেকেই ✓ / ✕ দিন।';
+      const again = document.createElement('button');
+      again.type = 'button';
+      again.className = 'adm__link';
+      again.textContent = 'আবার জুড়ুন';
+      again.addEventListener('click', () => {
+        tgBox.dataset.repair = '1';
+        renderTelegram(t);
+      });
+      tgBox.append(p, again);
+      tgBox.dataset.state = 'on';
+      return;
+    }
+    let code = store.get('parar-pujo:tg-code', sessionStorage);
+    if (!code) {
+      code = String(100000 + Math.floor(Math.random() * 900000));
+      store.set('parar-pujo:tg-code', code, sessionStorage);
+    }
+    tgBox.dataset.state = 'pair';
+    const steps = document.createElement('ol');
+    for (const s of ['টেলিগ্রামে আপনার বটটা খুলুন।', `এই মেসেজটা পাঠান: `, 'তারপর নিচের বোতাম চাপুন।']) {
+      const li = document.createElement('li');
+      li.textContent = s;
+      steps.append(li);
+    }
+    const codeEl = document.createElement('code');
+    codeEl.textContent = `/start ${code}`;
+    steps.children[1].append(codeEl);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn--yellow';
+    btn.textContent = 'পাঠিয়েছি — টেলিগ্রাম চালু করুন';
+    const msg = document.createElement('p');
+    msg.className = 'tg__msg';
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      msg.textContent = 'জুড়ছি…';
+      try {
+        const res = await api<{ chat: string }>('/api/admin/telegram/setup', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
+        delete tgBox.dataset.repair;
+        msg.textContent = `✓ জুড়ে গেছে (${res.chat}) — টেলিগ্রামে একটা মেসেজ গেছে।`;
+        setTimeout(() => void load().catch(() => {}), 1500);
+      } catch (err) {
+        msg.textContent = (err as Error).message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    const title = document.createElement('b');
+    title.textContent = 'ফোনে টেলিগ্রামে অনুমোদন করুন';
+    tgBox.append(title, steps, btn, msg);
+  }
+
+  // ---------- queue ----------
+  function render() {
+    for (const t of ['hidden', 'pending', 'pujas', 'live'] as const) {
+      const n = items.filter((i) => inTab(i, t) && !(t === 'pujas' && i.status === 'live')).length;
+      $(`[data-count="${t}"]`).textContent = toBnDigits(n);
+      $(`[data-tab="${t}"]`).setAttribute('aria-selected', String(t === tab));
+    }
+    $('[data-hint]').textContent = {
+      hidden: '৩ জন রিপোর্ট করায় এগুলো সরানো আছে। ঠিক থাকলে আবার চালু করুন, নইলে মুছে দিন।',
+      pending: 'সেলফি, বন্ধুদের ছবি, ঠাকুর — সব চলবে, ✓ দিলে ২৪ ঘণ্টা সবাই দেখবে। কাউকে লুকিয়ে তোলা, আপত্তিকর বা রাজনৈতিক কিছু হলে ✕।',
+      pujas: 'নতুন পুজো আগে, তারপর যেগুলো সাইটে আছে। ✓ দিলে হোম পেজে "আরও পাড়ার পুজো"-তে দেখা যাবে।',
+      live: 'এখন সবাই দেখছে। কোনোটা সরাতে চাইলে ✕।',
+    }[tab];
+
+    const shown = items.filter((i) => inTab(i, tab));
+    list.replaceChildren(...shown.map(row));
+    if (!shown.length) {
+      const empty = document.createElement('li');
+      empty.className = 'adm__empty';
+      empty.textContent = 'কিছু নেই 🎉';
+      list.append(empty);
+    }
+  }
+
+  function row(item: Item) {
+    const li = document.createElement('li');
+    li.className = 'item';
+    const img = document.createElement('img');
+    img.src = item.url;
+    img.alt = '';
+    img.loading = 'lazy';
+    const info = document.createElement('div');
+    info.className = 'item__info';
+    const title = document.createElement('strong');
+    const meta = document.createElement('span');
+    meta.className = 'item__meta';
+    const body = document.createElement('p');
+
+    if (item.kind === 'stories') {
+      title.textContent = names[item.pandal] ?? item.pandalName ?? item.pandal;
+      meta.textContent = [timeAgo(item.createdAt), item.author, item.reports ? `রিপোর্ট ${toBnDigits(item.reports)}` : null, item.reviewedBy && `✓ ${item.reviewedBy}`]
+        .filter(Boolean)
+        .join(' · ');
+      body.textContent = item.caption ?? '';
+    } else {
+      title.textContent = item.nameBn + (item.nameEn ? ` (${item.nameEn})` : '');
+      meta.textContent = [item.status === 'live' ? '✓ সাইটে আছে' : 'নতুন', timeAgo(item.createdAt), item.submitter && `পাঠিয়েছেন ${item.submitter}`].filter(Boolean).join(' · ');
+      body.textContent = [`পাড়া: ${item.areaBn}`, item.themeBn && `থিম: ${item.themeBn}`].filter(Boolean).join(' · ');
+      if (item.mapUrl) {
+        const a = document.createElement('a');
+        a.href = item.mapUrl;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = ' · ম্যাপ দেখুন';
+        body.append(a);
+      }
+    }
+    info.append(title, meta, body);
+
+    const actions = document.createElement('div');
+    actions.className = 'item__actions';
+    const live = item.status === 'live';
+    if (!live) actions.append(button(item.kind === 'pujas' ? '✓ সাইটে দিন' : '✓ অনুমোদন', 'approve', item));
+    actions.append(button(live ? '✕ সরিয়ে দিন' : '✕ বাতিল', 'reject', item));
+    li.append(img, info, actions);
+    return li;
+  }
+
+  function button(text: string, action: 'approve' | 'reject', item: Item) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `btn ${action === 'approve' ? 'btn--yellow' : ''}`;
+    b.textContent = text;
+    b.addEventListener('click', async () => {
+      if (action === 'reject' && item.status === 'live' && !confirm('এটা সরিয়ে দেবেন?')) return;
+      b.disabled = true;
+      try {
+        await api(`/api/admin/${item.kind}/${item.id}`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action }),
+        });
+        if (action === 'approve') item.status = 'live';
+        else items = items.filter((i) => i !== item);
+        render();
+      } catch (err) {
+        alert((err as Error).message);
+        void load().catch(() => {});
+      }
+    });
+    return b;
+  }
+
+  login.addEventListener('submit', (e) => {
+    e.preventDefault();
+    store.set(KEY, String(new FormData(login).get('key')));
+    void load().catch(() => {});
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((b) =>
+    b.addEventListener('click', () => {
+      tab = b.dataset.tab as Tab;
+      render();
+    }),
+  );
+  $('[data-refresh]').addEventListener('click', () => void load().catch(() => {}));
+  $('[data-logout]').addEventListener('click', () => showLogin());
+
+  // Keep the queue fresh while the page is open on someone's phone
+  setInterval(() => {
+    if (!panel.hidden && document.visibilityState === 'visible' && tgBox.dataset.state !== 'pair') void load().catch(() => {});
+  }, 30000);
+
+  if (store.get(KEY)) void load().catch(() => {});
+  else showLogin();
+</script>
+
+<style>
+  .adm {
+    max-width: 720px;
+    padding-top: 32px;
+  }
+
+  .adm__login {
+    display: grid;
+    gap: 10px;
+    max-width: 360px;
+    margin: 28px auto 0;
+  }
+
+  .adm__login input {
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--kash);
+    font: inherit;
+  }
+
+  .adm__msg {
+    margin: 0;
+    color: var(--sindoor);
+    font-weight: 600;
+  }
+
+  .adm__bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0 14px;
+    font-weight: 600;
+  }
+
+  .adm__bar span {
+    flex: 1;
+  }
+
+  .adm__link {
+    border: 0;
+    background: none;
+    color: var(--sindoor);
+    font-weight: 600;
+  }
+
+  .tg {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--kash);
+    font-size: 0.95rem;
+  }
+
+  .tg[data-state='on'] {
+    border-color: #3f8f4f;
+    background: #e9f4e6;
+  }
+
+  .tg[data-state='off'] {
+    border-style: dashed;
+    color: var(--ink-soft);
+  }
+
+  .tg p {
+    margin: 0;
+  }
+
+  .tg :global(ol) {
+    margin: 8px 0 12px;
+    padding-left: 1.3em;
+  }
+
+  .tg :global(code) {
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--kash);
+    font-size: 1rem;
+    user-select: all;
+  }
+
+  .tg :global(.tg__msg) {
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .adm__tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .adm__tabs button {
+    flex: 1;
+    padding: 10px 4px;
+    border: 2px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    background: var(--paper-deep);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .adm__tabs button[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--kash);
+  }
+
+  .adm__tabs b {
+    display: inline-block;
+    min-width: 1.6em;
+    margin-left: 2px;
+    border-radius: 999px;
+    background: var(--sindoor);
+    color: var(--kash);
+    font-size: 0.78rem;
+  }
+
+  .adm__hint {
+    margin: 12px 0;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .adm__list {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .adm__list :global(.item) {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    padding: 12px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--kash);
+  }
+
+  .adm__list :global(.item img) {
+    grid-row: span 2;
+    width: 120px;
+    height: 160px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #ddd;
+  }
+
+  .adm__list :global(.item__info) {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .adm__list :global(.item__info strong) {
+    font-family: var(--font-sign);
+    font-size: 1.2rem;
+    font-weight: 400;
+  }
+
+  .adm__list :global(.item__meta) {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  .adm__list :global(.item__info p) {
+    margin: 4px 0 0;
+    font-family: var(--font-serif);
+  }
+
+  .adm__list :global(.item__actions) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-self: end;
+  }
+
+  .adm__list :global(.item__actions .btn) {
+    padding: 0.45em 0.9em;
+    font-size: 0.95rem;
+  }
+
+  .adm__list :global(.adm__empty) {
+    padding: 40px 0;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+</style>

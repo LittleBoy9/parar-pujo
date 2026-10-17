@@ -1,0 +1,263 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { pandals } from '../data/pandals';
+import { palettes } from '../data/palettes';
+import { tithis } from '../data/site';
+import { toBnDigits } from '../lib/bangla';
+
+const stamps = pandals.map((p, i) => ({ slug: p.slug, nameBn: p.nameBn, color: palettes[p.palette].bg, num: toBnDigits(i + 1) }));
+const total = pandals.length;
+---
+
+<Layout
+  title="ঠাকুর দেখা পাসপোর্ট"
+  description="কটা ঠাকুর দেখলেন? প্রতিটা প্যান্ডেলে ছাপ মারুন, পাসপোর্ট শেয়ার করুন। Your Durga Puja pandal-hopping passport."
+  og="passport"
+  ogAlt="ঠাকুর দেখা পাসপোর্ট — পাড়ার পুজো"
+>
+  <section class="passport wrap">
+    <div class="book">
+      <header class="book__head">
+        <p class="book__kicker">পাড়ার পুজো · ঠাকুর দেখা</p>
+        <h1 class="book__title">পাসপোর্ট</h1>
+        <p class="book__count">
+          <span data-count>০</span>/{toBnDigits(total)} ঠাকুর দেখা হল
+        </p>
+        <p class="book__rank" data-rank>এখনও বেরোননি? জামা পরে ফেলুন!</p>
+      </header>
+
+      <ol class="stamps">
+        {
+          stamps.map((s, i) => (
+            <li class="slot" data-slot={s.slug} style={`--c:${s.color};--r:${[-12, 8, -4, 14, -9, 5, -15][i % 7]}deg`}>
+              <a href={`/pandal/${s.slug}`} class="slot__link">
+                <span class="slot__num">{s.num}</span>
+                <span class="slot__ink" aria-hidden="true">
+                  <span class="slot__name">{s.nameBn}</span>
+                  <span class="slot__day" data-day />
+                </span>
+                <span class="visually-hidden" data-sr />
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="book__actions">
+        <button class="btn btn--red" type="button" data-passport-share>
+          পাসপোর্ট শেয়ার করুন
+        </button>
+        <a class="btn" href="/para">আরও ঠাকুর দেখি</a>
+      </div>
+      <p class="book__note">এই পাসপোর্ট শুধু আপনার ফোনেই থাকে। · Saved only on this phone.</p>
+    </div>
+  </section>
+  <canvas hidden data-passport-canvas></canvas>
+</Layout>
+
+<script define:vars={{ stamps, tithis, total }}>
+  window.__PASSPORT__ = { stamps, tithis, total };
+</script>
+
+<script>
+  import { getVisits } from '../scripts/passport';
+  import { loadFonts, shareOrDownload } from '../scripts/card/kit';
+  import { drawPassport } from '../scripts/card/passport';
+  import { toBnDigits } from '../lib/bangla';
+
+  const { stamps, tithis, total } = (window as unknown as {
+    __PASSPORT__: { stamps: { slug: string; nameBn: string; color: string }[]; tithis: { dates: string[]; bn: string }[]; total: number };
+  }).__PASSPORT__;
+
+  const visits = getVisits();
+  const seen = stamps.filter((s) => visits[s.slug]);
+
+  const dayLabel = (iso: string) => {
+    const d = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date(iso));
+    return tithis.find((t) => t.dates.includes(d))?.bn ?? d.split('-').reverse().slice(0, 2).map(toBnDigits).join('/');
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-slot]').forEach((slot) => {
+    const when = visits[slot.dataset.slot!];
+    const sr = slot.querySelector('[data-sr]')!;
+    if (when) {
+      slot.classList.add('is-seen');
+      slot.querySelector('[data-day]')!.textContent = dayLabel(when);
+      sr.textContent = 'দেখা হয়েছে';
+    } else {
+      sr.textContent = 'এখনও দেখা হয়নি';
+    }
+  });
+
+  const ratio = seen.length / total;
+  const rank =
+    seen.length === 0
+      ? 'এখনও বেরোননি? জামা পরে ফেলুন!'
+      : seen.length === total
+        ? 'পুরো পাড়া কভার! 🏆'
+        : ratio >= 0.7
+          ? 'পাক্কা ঠাকুর-দেখিয়ে!'
+          : ratio >= 0.35
+            ? 'ঠাকুর দেখা জমে উঠেছে'
+            : 'সবে শুরু — পা চালান!';
+
+  document.querySelector('[data-count]')!.textContent = toBnDigits(seen.length);
+  document.querySelector('[data-rank]')!.textContent = rank;
+
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-passport-canvas]')!;
+  document.querySelector('[data-passport-share]')!.addEventListener('click', async () => {
+    await loadFonts();
+    drawPassport(canvas, {
+      stamps: stamps.map((s) => ({ ...s, seen: Boolean(visits[s.slug]) })),
+      seenCount: seen.length,
+      total,
+      rank,
+      site: location.host,
+    });
+    await shareOrDownload(canvas, 'parar-pujo-passport.jpg', 'আমার ঠাকুর দেখা পাসপোর্ট');
+  });
+</script>
+
+<style>
+  .passport {
+    padding-top: 36px;
+  }
+
+  /* the passport booklet */
+  .book {
+    max-width: 640px;
+    margin-inline: auto;
+    padding: 32px clamp(18px, 5vw, 40px) 28px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 31px, rgb(44 110 122 / 0.08) 31px 32px),
+      #fdf6e7;
+    border: 3px solid #1f2a5a;
+    border-radius: 6px 16px 16px 6px;
+    box-shadow:
+      -10px 0 0 #1f2a5a,
+      8px 10px 0 rgb(43 26 16 / 0.2);
+  }
+
+  .book__head {
+    text-align: center;
+  }
+
+  .book__kicker {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #1f2a5a;
+  }
+
+  .book__title {
+    font-family: var(--font-sign);
+    font-size: clamp(3rem, 12vw, 4.5rem);
+    color: #1f2a5a;
+  }
+
+  .book__count {
+    margin: 4px 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+  }
+
+  .book__count [data-count] {
+    font-family: var(--font-sign);
+    font-size: 2.6rem;
+    color: var(--sindoor);
+  }
+
+  .book__rank {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .stamps {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 18px;
+    margin: 30px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .slot__link {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    border: 2px dashed rgb(31 42 90 / 0.35);
+    border-radius: 50%;
+    text-decoration: none;
+  }
+
+  .slot__num {
+    font-family: var(--font-sign);
+    font-size: 2rem;
+    color: rgb(31 42 90 / 0.3);
+  }
+
+  .slot__ink {
+    position: absolute;
+    inset: 4px;
+    display: none;
+    place-content: center;
+    gap: 2px;
+    padding: 12px;
+    border: 4px double var(--c);
+    border-radius: 50%;
+    color: var(--c);
+    text-align: center;
+    rotate: var(--r);
+    mix-blend-mode: multiply;
+    /* uneven ink */
+    mask-image: radial-gradient(circle at 30% 40%, #000 55%, rgb(0 0 0 / 0.7) 80%);
+  }
+
+  .slot__name {
+    font-family: var(--font-sign);
+    font-size: 1.05rem;
+    line-height: 1.15;
+  }
+
+  .slot__day {
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-top: 1.5px solid currentColor;
+    padding-top: 2px;
+  }
+
+  .slot.is-seen .slot__ink {
+    display: grid;
+    animation: thunk 0.4s cubic-bezier(0.3, 1.6, 0.6, 1) both;
+  }
+
+  .slot.is-seen .slot__num {
+    visibility: hidden;
+  }
+
+  .slot.is-seen .slot__link {
+    border-color: transparent;
+  }
+
+  @keyframes thunk {
+    from {
+      opacity: 0;
+      scale: 1.8;
+    }
+  }
+
+  .book__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .book__note {
+    margin: 18px 0 0;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+</style>

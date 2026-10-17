@@ -1,0 +1,42 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "parar-pujo",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+
+  // The Astro build. Static files are served for free and never wake the Worker;
+  // only /api/* and /media/* run code (and count toward the free daily requests).
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*", "/media/*"]
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "parar-pujo",
+      // Replace with the id printed by `npx wrangler d1 create parar-pujo`
+      "database_id": "d55db910-3069-4878-b622-d7e0146ad646",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "parar-pujo-media" }],
+
+  // Hourly sweep: deletes expired stories and their photos.
+  "triggers": { "crons": ["17 * * * *"] },
+
+  "vars": {
+    // Hard ceiling on accepted uploads per day (IST) — protects the free tier.
+    "DAILY_UPLOAD_CAP": "1500",
+    // Optional: public R2 custom-domain URL (e.g. https://media.example.in).
+    // When set, photos are served straight from R2 instead of through the Worker.
+    "MEDIA_BASE": ""
+  }
+  // Secrets (set with `npx wrangler secret put <NAME>`, or .dev.vars locally):
+  //   ADMIN_KEYS — comma-separated "name:key" pairs, one per approver
+  //   IP_SALT    — random string used to hash IP addresses (we never store raw IPs)
+  //   TELEGRAM_BOT_TOKEN — optional; from @BotFather, enables approve-from-Telegram
+}
