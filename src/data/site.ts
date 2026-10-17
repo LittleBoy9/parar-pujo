@@ -1,8 +1,8 @@
 // Everything about the para itself lives here — change once, updates everywhere.
 
 export const site = {
-  // live address — keep in sync with `site` in astro.config.mjs (change both when the domain arrives)
-  url: 'https://parar-pujo.iamsounak01.workers.dev',
+  // live address — keep in sync with `site` in astro.config.mjs
+  url: 'https://pararpujo.in',
   titleBn: 'পাড়ার পুজো',
   titleEn: 'Parar Pujo',
   // the site is for every para; this is our own, home to the /para guide
@@ -22,6 +22,7 @@ export const creator = {
   websiteLabel: 'sounakdas.in',
   instagram: 'frame.chor',
   instagramUrl: 'https://www.instagram.com/frame.chor/',
+  facebookUrl: 'https://www.facebook.com/sounak.das.545',
   photo: '/creator/sounak.jpg', // 480px
   photoSm: '/creator/sounak-sm.jpg', // 120px
 };

@@ -26,6 +26,14 @@
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "parar-pujo-media" }],
 
   // Hourly sweep: deletes expired stories and their photos.
+  // pararpujo.in (zone on Cloudflare, registered at GoDaddy). The old workers.dev address keeps
+  // working; pages there and on www hop to the main domain (see Layout.astro).
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "pararpujo.in", "custom_domain": true },
+    { "pattern": "www.pararpujo.in", "custom_domain": true }
+  ],
+
   "triggers": { "crons": ["17 * * * *"] },
 
   "vars": {

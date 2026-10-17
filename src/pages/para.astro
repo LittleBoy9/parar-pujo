@@ -9,25 +9,27 @@ import { pandals } from '../data/pandals';
 import { site } from '../data/site';
 import { toBnDigits } from '../lib/bangla';
 
+const count = `${pandals.length} ${pandals.length === 1 ? 'puja' : 'pujas'}`;
 ---
 
 <Layout
   title="আমাদের পাড়ার ঠাকুর"
+  titleEn="Our Para's Pujas"
   description={`${site.areaBn}-এর দুর্গাপুজো — ঠাকুর দেখার রুট, হাতে আঁকা ম্যাপ আর পাসপোর্ট। Durga Puja pandals in ${site.areaEn}: route map and passport.`}
   og="para"
   ogAlt={`আমাদের পাড়ার ঠাকুর — ${site.areaBn}`}
 >
   <header class="local wrap">
-    <p class="local__kicker">{site.areaBn}</p>
-    <h1 class="local__title">আমাদের পাড়ার ঠাকুর</h1>
-    <p class="local__sub">
+    <p class="local__kicker" data-en={site.areaEn}>{site.areaBn}</p>
+    <h1 class="local__title" data-en="Our Para's Pujas">আমাদের পাড়ার ঠাকুর</h1>
+    <p class="local__sub" data-en={`${count} — follow the numbers and you won't miss a single one`}>
       {site.areaBn} — {toBnDigits(pandals.length)}টা পুজো, নম্বর ধরে ঘুরলেই সব দেখা হয়ে যাবে
       <span class="en">· {site.areaEn}</span>
     </p>
-    <nav class="local__jump" aria-label="এই পাতায়">
-      <a class="btn" href="#thakur">ঠাকুর</a>
-      <a class="btn" href="#map">ম্যাপ</a>
-      <a class="btn btn--yellow" href="/passport">পাসপোর্ট</a>
+    <nav class="local__jump" aria-label="এই পাতায়" data-en-aria-label="On this page">
+      <a class="btn" href="#thakur" data-en="Pandals">ঠাকুর</a>
+      <a class="btn" href="#map" data-en="Map">ম্যাপ</a>
+      <a class="btn btn--yellow" href="/passport" data-en="Passport">পাসপোর্ট</a>
     </nav>
   </header>
 
@@ -42,7 +44,7 @@ import { toBnDigits } from '../lib/bangla';
       {pandals.map((p, i) => <PandalCard pandal={p} index={i} />)}
     </div>
     <p class="more">
-      🪔 <b>পাড়ার আরও ঠাকুর আসছে…</b> একে একে সব পুজো যোগ হচ্ছে।
+      🪔 <b data-en="More para pujas coming soon…">পাড়ার আরও ঠাকুর আসছে…</b> <span data-en="We're adding them one by one.">একে একে সব পুজো যোগ হচ্ছে।</span>
       <span class="en">More pujas from the para coming soon.</span>
     </p>
   </section>
@@ -50,17 +52,17 @@ import { toBnDigits } from '../lib/bangla';
   <div class="lalpaar" aria-hidden="true"></div>
 
   <section id="map" class="wrap section">
-    <h2 class="section-title">পাড়ার ম্যাপ</h2>
-    <p class="section-sub">ঠাকুর দেখার রুট <span class="en"> · the pandal-hopping route</span></p>
+    <h2 class="section-title" data-en="Map of the para">পাড়ার ম্যাপ</h2>
+    <p class="section-sub" data-en="The pandal-hopping route">ঠাকুর দেখার রুট <span class="en"> · the pandal-hopping route</span></p>
     <ParaMap />
   </section>
 
   <section class="wrap section">
     <div class="invite">
-      <h2 class="invite__title">ঠাকুর দেখা পাসপোর্ট</h2>
-      <p>প্রতিটা ঠাকুর দেখে "দেখে এলাম" টিপুন — পাসপোর্টে ছাপ পড়বে। কে কটা দেখল, শেয়ার করে দেখান!</p>
+      <h2 class="invite__title" data-en="Pandal-hopping passport">ঠাকুর দেখা পাসপোর্ট</h2>
+      <p data-en="Tap ✓ at every pandal you visit and it gets stamped in your passport. Then share your count — let's see who saw the most!">প্রতিটা ঠাকুর দেখে "দেখে এলাম" টিপুন — পাসপোর্টে ছাপ পড়বে। কে কটা দেখল, শেয়ার করে দেখান!</p>
       <p class="en">Stamp every pandal you visit, then show off your count.</p>
-      <a class="btn btn--yellow" href="/passport">আমার পাসপোর্ট</a>
+      <a class="btn btn--yellow" href="/passport" data-en="My passport">আমার পাসপোর্ট</a>
     </div>
   </section>
 </Layout>

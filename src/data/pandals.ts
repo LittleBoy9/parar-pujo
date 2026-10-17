@@ -20,6 +20,7 @@ export interface Pandal {
   nameBn: string;
   nameEn: string;
   areaBn: string; // its para / locality, shown on cards, posters and the area filter
+  areaEn: string;
   themeBn?: string; // this year's theme
   themeEn?: string;
   storyBn?: string; // a line or two — a memory, what makes this one special
@@ -47,6 +48,7 @@ export const pandals: Pandal[] = [
     nameBn: 'তরুণ সংঘ',
     nameEn: 'Tarun Sangha',
     areaBn: 'ঘোষপুর',
+    areaEn: 'Ghoshpur',
     // TODO: theme, story, map link, founding year — waiting on details
     frame: 'chalchitra', // the red-and-gold arch, first in the row
     palette: 'sindoor',
@@ -58,6 +60,7 @@ export const pandals: Pandal[] = [
     nameBn: 'যমুনা সংঘ',
     nameEn: 'Jamuna Sangha',
     areaBn: 'ঘোষপুর',
+    areaEn: 'Ghoshpur',
     // TODO: theme, story, map link, founding year — waiting on details
     frame: 'pujabarshiki', // the haldi Sharadiya cover, second in the row
     palette: 'haldi',

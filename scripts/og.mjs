@@ -80,7 +80,7 @@ const INK = '#2b1a10';
 const SINDOOR = '#b3261e';
 const HALDI = '#efb128';
 const PAPER = '#f6ecd6';
-const host = new URL(site.url ?? 'https://parar-pujo.iamsounak01.workers.dev').host;
+const host = new URL(site.url).host;
 
 const photos = Object.fromEntries(await Promise.all(pandals.map(async (p) => [p.slug, await loadImage(join(ROOT, 'public', p.photos[0]))])));
 const focusY = (p) => (p.focus ? parseFloat(p.focus.split(' ')[1]) / 100 : 0.5);

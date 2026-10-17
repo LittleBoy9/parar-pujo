@@ -32,16 +32,16 @@ import { site } from '../data/site';
     <a class="local__card" href="/para">
       <span class="local__pin" aria-hidden="true">📍</span>
       <span>
-        <b>আমাদের পাড়ার ঠাকুর দেখা</b>
-        <span>{site.areaBn} — রুট ম্যাপ আর ঠাকুর দেখা পাসপোর্ট <span class="en">· our own para's guide</span></span>
+        <b data-en="Pandal hopping in our own para">আমাদের পাড়ার ঠাকুর দেখা</b>
+        <span data-en={`${site.areaEn} — route map and pandal-hopping passport`}>{site.areaBn} — রুট ম্যাপ আর ঠাকুর দেখা পাসপোর্ট <span class="en">· our own para's guide</span></span>
       </span>
       <span class="local__go" aria-hidden="true">→</span>
     </a>
   </section>
 
   <section class="wrap final">
-    <p class="final__line">এবার আপনার পালা</p>
-    <a class="btn btn--red final__cta" href="/card">✨ নিজের পুজোর পোস্টার বানান</a>
+    <p class="final__line" data-en="Now it's your turn">এবার আপনার পালা</p>
+    <a class="btn btn--red final__cta" href="/card" data-en="✨ Make your own puja poster">✨ নিজের পুজোর পোস্টার বানান</a>
   </section>
 </Layout>
 

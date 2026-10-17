@@ -1,9 +1,11 @@
 // Full-screen story player: tap right/left to move, hold to pause, swipe down to close.
+import { isEn, tr } from '../lib/i18n';
 import { reportStory, timeAgo, type Story } from './api';
 
 export interface StoryGroup {
   slug: string;
   nameBn: string;
+  nameEn?: string | null;
   color: string;
   href: string; // where the pandal name in the viewer links to
   stories: Story[];
@@ -98,6 +100,7 @@ export class StoryViewer {
   private show() {
     const g = this.group;
     const s = g.stories[this.si];
+    const name = (isEn() && g.nameEn) || g.nameBn;
 
     // progress bars — replace each time so the CSS animation restarts cleanly
     this.el.bars.replaceChildren(
@@ -112,11 +115,11 @@ export class StoryViewer {
 
     this.dialog.classList.add('is-paused'); // until the photo has loaded
     this.img.src = s.url;
-    this.img.alt = s.caption ?? `${g.nameBn} — স্টোরি`;
+    this.img.alt = s.caption ?? tr(`${name} — স্টোরি`, `${name} — story`);
     if (this.img.complete) this.dialog.classList.remove('is-paused');
 
     this.el.dot.style.background = g.color;
-    this.el.pandal.textContent = g.nameBn;
+    this.el.pandal.textContent = name;
     this.el.pandal.setAttribute('href', g.href);
     this.el.meta.textContent = [timeAgo(s.postedAt), s.author].filter(Boolean).join(' · ');
     this.el.caption.textContent = s.caption ?? '';
@@ -149,13 +152,13 @@ export class StoryViewer {
   private async report() {
     const s = this.group.stories[this.si];
     this.dialog.classList.add('is-paused');
-    if (!confirm('ছবিটা আপত্তিকর বা অনুমতি ছাড়া তোলা? রিপোর্ট করবেন?')) {
+    if (!confirm(tr('ছবিটা আপত্তিকর বা অনুমতি ছাড়া তোলা? রিপোর্ট করবেন?', 'Is this photo offensive, or taken without permission? Report it?'))) {
       this.dialog.classList.remove('is-paused');
       return;
     }
     try {
       await reportStory(s.id);
-      this.toast('ধন্যবাদ — আমরা দেখে নিচ্ছি');
+      this.toast(tr('ধন্যবাদ — আমরা দেখে নিচ্ছি', "Thanks — we'll take a look"));
     } catch (err) {
       this.toast((err as Error).message);
     }

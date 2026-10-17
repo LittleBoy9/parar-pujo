@@ -1,6 +1,7 @@
 // Approval logic, shared by the /admin page and the Telegram buttons.
 import { STORY_LIFETIME, fail, json, mediaUrl } from './http';
 import { getSetting } from './settings';
+import { VISITS_HEAD_START, counts } from './stats';
 
 export type Action = 'approve' | 'reject';
 export type ReviewResult = { ok: true; status: 'live' | 'rejected' } | { ok: false; message: string };
@@ -87,14 +88,32 @@ interface PujaRow {
   reviewed_by: string | null;
 }
 
+function toStory(env: Env, s: StoryRow) {
+  return {
+    id: s.id,
+    pandal: s.pandal,
+    pandalName: s.pandal_name,
+    url: mediaUrl(env, s.media_key),
+    caption: s.caption,
+    author: s.author,
+    status: s.status,
+    reports: s.reports,
+    createdAt: s.created_at,
+    reviewedBy: s.reviewed_by,
+    expiresAt: s.expires_at,
+  };
+}
+
+const STORY_COLUMNS = `s.id, s.pandal, COALESCE(p.name_bn, s.puja_name || ' · ' || s.puja_area) AS pandal_name, s.media_key, s.caption,
+              s.author, s.status, s.reports, s.created_at, s.reviewed_by, s.expires_at
+         FROM stories s LEFT JOIN puja_submissions p ON p.id = s.pandal`;
+
 /** GET /api/admin/queue — stories (reported, waiting, live) and puja submissions (waiting, listed). */
 export async function queue(env: Env, name: string): Promise<Response> {
   const now = Date.now();
-  const [stories, pujas, chat] = await Promise.all([
+  const [stories, pujas, archived, chat, stats] = await Promise.all([
     env.DB.prepare(
-      `SELECT s.id, s.pandal, COALESCE(p.name_bn, s.puja_name || ' · ' || s.puja_area) AS pandal_name, s.media_key, s.caption, s.author, s.status, s.reports,
-              s.created_at, s.reviewed_by, s.expires_at
-         FROM stories s LEFT JOIN puja_submissions p ON p.id = s.pandal
+      `SELECT ${STORY_COLUMNS}
         WHERE s.status IN ('pending', 'hidden') OR (s.status = 'live' AND s.expires_at > ?1)
         ORDER BY CASE s.status WHEN 'hidden' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END, s.created_at ASC
         LIMIT 300`,
@@ -106,26 +125,18 @@ export async function queue(env: Env, name: string): Promise<Response> {
          FROM puja_submissions WHERE status IN ('pending', 'live')
         ORDER BY status = 'live', created_at ASC LIMIT 300`,
     ).all<PujaRow>(),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM stories WHERE status = 'live' AND expires_at <= ?1`).bind(now).first<{ n: number }>(),
     getSetting(env, 'telegram_chat'),
+    counts(env),
   ]);
 
   return json({
     you: name,
     now,
     telegram: { tokenSet: Boolean(env.TELEGRAM_BOT_TOKEN), connected: Boolean(chat) },
-    stories: stories.results.map((s) => ({
-      id: s.id,
-      pandal: s.pandal,
-      pandalName: s.pandal_name,
-      url: mediaUrl(env, s.media_key),
-      caption: s.caption,
-      author: s.author,
-      status: s.status,
-      reports: s.reports,
-      createdAt: s.created_at,
-      reviewedBy: s.reviewed_by,
-      expiresAt: s.expires_at,
-    })),
+    archived: archived?.n ?? 0,
+    stats: { ...stats, shownVisits: stats.visits + VISITS_HEAD_START }, // real totals, and what the site shows
+    stories: stories.results.map((s) => toStory(env, s)),
     pujas: pujas.results.map((p) => ({
       id: p.id,
       nameBn: p.name_bn,
@@ -140,6 +151,21 @@ export async function queue(env: Env, name: string): Promise<Response> {
       reviewedBy: p.reviewed_by,
     })),
   });
+}
+
+const ARCHIVE_PAGE = 60;
+
+/** GET /api/admin/archive?before=<expires_at> — approved stories whose 24h are over, newest first. */
+export async function archive(request: Request, env: Env): Promise<Response> {
+  const before = Number(new URL(request.url).searchParams.get('before')) || Infinity;
+  const { results } = await env.DB.prepare(
+    `SELECT ${STORY_COLUMNS}
+      WHERE s.status = 'live' AND s.expires_at < ?1
+      ORDER BY s.expires_at DESC LIMIT ?2`,
+  )
+    .bind(Math.min(before, Date.now() + 1), ARCHIVE_PAGE + 1)
+    .all<StoryRow>();
+  return json({ stories: results.slice(0, ARCHIVE_PAGE).map((s) => toStory(env, s)), more: results.length > ARCHIVE_PAGE });
 }
 
 /** POST /api/admin/{stories|pujas}/:id {action} */

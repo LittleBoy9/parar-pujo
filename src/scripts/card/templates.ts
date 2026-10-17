@@ -124,6 +124,7 @@ function postmark(ctx: CanvasRenderingContext2D, x: number, y: number, r: number
 const chalchitra: Template = {
   id: 'chalchitra',
   bn: 'চালচিত্র',
+  en: 'Chalchitra',
   draw(ctx, H, d) {
     const p = d.palette;
     ctx.fillStyle = p.bg;
@@ -181,6 +182,7 @@ const chalchitra: Template = {
 const stamp: Template = {
   id: 'stamp',
   bn: 'ডাকটিকিট',
+  en: 'Postage stamp',
   draw(ctx, H, d) {
     const p = d.palette;
     const paper = '#f3e6c8';
@@ -241,6 +243,7 @@ const stamp: Template = {
 const marquee: Template = {
   id: 'marquee',
   bn: 'সিনেমা বোর্ড',
+  en: 'Cinema board',
   draw(ctx, H, d) {
     const p = d.palette;
     ctx.fillStyle = p.deep;
@@ -306,6 +309,7 @@ const marquee: Template = {
 const postcard: Template = {
   id: 'postcard',
   bn: 'পোস্টকার্ড',
+  en: 'Postcard',
   draw(ctx, H, d) {
     const buff = '#ecd49a';
     const brown = '#8a2d1f';
@@ -386,6 +390,7 @@ const postcard: Template = {
 const sharadiya: Template = {
   id: 'sharadiya',
   bn: 'শারদীয়া পত্রিকা',
+  en: 'Sharadiya magazine',
   draw(ctx, H, d) {
     const p = d.palette;
     ctx.fillStyle = p.bg;
@@ -447,6 +452,7 @@ const sharadiya: Template = {
 const album: Template = {
   id: 'album',
   bn: 'পুজোর অ্যালবাম',
+  en: 'Puja album',
   draw(ctx, H, d) {
     const paper = '#f4ead5';
     ctx.fillStyle = paper;
@@ -505,6 +511,7 @@ const album: Template = {
 const alpona: Template = {
   id: 'alpona',
   bn: 'আলপনা',
+  en: 'Alpona',
   draw(ctx, H, d) {
     const p = d.palette;
     const white = '#fffaf0';
@@ -578,6 +585,7 @@ const alpona: Template = {
 const ticket: Template = {
   id: 'ticket',
   bn: 'ঠাকুর দেখার টিকিট',
+  en: 'Pandal-hopping ticket',
   draw(ctx, H, d) {
     const p = d.palette;
     const cream = '#fbf3e4';
@@ -681,6 +689,7 @@ const ticket: Template = {
 const bijoya: Template = {
   id: 'bijoya',
   bn: 'শুভ বিজয়া',
+  en: 'Shubho Bijoya',
   draw(ctx, H, d) {
     const cream = '#fbf3e4';
     ctx.fillStyle = cream;
@@ -749,7 +758,9 @@ const bijoya: Template = {
 const duo: Template = {
   id: 'duo',
   bn: 'সেলফি জুটি',
+  en: 'Selfie duo',
   slots: ['প্যান্ডেল / ঠাকুর', 'আপনার সেলফি'],
+  slotsEn: ['Pandal / Thakur', 'Your selfie'],
   draw(ctx, H, d) {
     const p = d.palette;
     ctx.fillStyle = p.deep;
@@ -802,7 +813,9 @@ const duo: Template = {
 const parikrama: Template = {
   id: 'parikrama',
   bn: 'পুজো পরিক্রমা',
+  en: 'Puja tour',
   slots: ['ছবি ১', 'ছবি ২', 'ছবি ৩', 'ছবি ৪'],
+  slotsEn: ['Photo 1', 'Photo 2', 'Photo 3', 'Photo 4'],
   draw(ctx, H, d) {
     const paper = '#f6ecd6';
     ctx.fillStyle = paper;
@@ -863,7 +876,9 @@ const parikrama: Template = {
 const reel: Template = {
   id: 'reel',
   bn: 'পুজোর রিল',
+  en: 'Puja reel',
   slots: ['ছবি ১', 'ছবি ২', 'ছবি ৩'],
+  slotsEn: ['Photo 1', 'Photo 2', 'Photo 3'],
   draw(ctx, H, d) {
     const p = d.palette;
     ctx.fillStyle = '#17110d';
@@ -914,6 +929,7 @@ const reel: Template = {
 const patrika: Template = {
   id: 'patrika',
   bn: 'পাড়ার বার্তা',
+  en: 'Para news',
   draw(ctx, H, d) {
     const paper = '#f1ead8';
     ctx.fillStyle = paper;
@@ -985,6 +1001,7 @@ const patrika: Template = {
 const chokh: Template = {
   id: 'chokh',
   bn: 'মায়ের চোখ',
+  en: "Maa's eyes",
   draw(ctx, H, d) {
     const p = d.palette;
     const bg = ctx.createRadialGradient(W / 2, H * 0.45, 80, W / 2, H * 0.45, H * 0.7);
@@ -1055,6 +1072,7 @@ const chokh: Template = {
 const lalpaar: Template = {
   id: 'lalpaar',
   bn: 'লাল পাড়',
+  en: 'Lal paar sari',
   draw(ctx, H, d) {
     const cream = '#fbf6ea';
     ctx.fillStyle = SINDOOR;

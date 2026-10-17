@@ -26,7 +26,7 @@ edge(18, 482, 18, 18, 15);
 <div class="marquee" style={`--bg:${p.bg};--ink:${p.ink};--accent:${p.accent};--deep:${p.deep};--soft:${p.soft}`}>
   <div class="marquee__head">
     <span class="marquee__kicker">এ বছরের সেরা আকর্ষণ</span>
-    <span class="marquee__name">{pandal.nameBn}</span>
+    <span class="marquee__name" data-en={pandal.nameEn}>{pandal.nameBn}</span>
   </div>
   <div class="marquee__window">
     <Photo pandal={pandal} seed={seed} eager={eager} />

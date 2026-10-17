@@ -11,31 +11,31 @@ interface Props {
 const { pandal } = Astro.props;
 const meta = pandals
   .filter((p) => !pandal || p.slug === pandal)
-  .map((p) => ({ slug: p.slug, nameBn: p.nameBn, color: palettes[p.palette].bg, href: `/pandal/${p.slug}` }));
+  .map((p) => ({ slug: p.slug, nameBn: p.nameBn, nameEn: p.nameEn, color: palettes[p.palette].bg, href: `/pandal/${p.slug}` }));
 const withCommunity = !pandal; // the home ring also shows visitor-submitted pujas
 const addHref = pandal ? `/story?pandal=${pandal}` : '/story';
 ---
 
 <section class="stories" data-stories={JSON.stringify(meta)} data-community={withCommunity ? '1' : undefined} aria-labelledby="stories-title">
   <div class="stories__head">
-    <h2 id="stories-title" class="stories__title"><span class="stories__live" aria-hidden="true"></span>পাড়ার স্টোরি</h2>
-    <span class="en stories__sub">live from the pandals · disappears in 24h</span>
+    <h2 id="stories-title" class="stories__title"><span class="stories__live" aria-hidden="true"></span><span data-en="Para stories">পাড়ার স্টোরি</span></h2>
+    <span class="stories__sub">live from the pandals · disappears in 24h</span>
   </div>
 
   <ul class="stories__row" data-story-row>
     <li>
       <a class="bubble bubble--add" href={addHref}>
         <span class="bubble__ring"><span class="bubble__plus" aria-hidden="true">+</span></span>
-        <span class="bubble__name">সেলফি দিন</span>
+        <span class="bubble__name" data-en="Add selfie">সেলফি দিন</span>
       </a>
     </li>
   </ul>
-  <p class="stories__empty" data-story-empty hidden>
+  <p class="stories__empty" data-story-empty hidden data-en={`No photos yet — <a href="${addHref}">be the first to share a selfie!</a>`}>
     এখনও কেউ ছবি দেয়নি — <a href={addHref}>প্রথম সেলফিটা আপনিই দিন!</a>
   </p>
 </section>
 
-<dialog class="viewer" data-viewer aria-label="স্টোরি">
+<dialog class="viewer" data-viewer aria-label="স্টোরি" data-en-aria-label="Story">
   <div class="viewer__bars" data-bars></div>
   <header class="viewer__head">
     <span class="viewer__dot" data-v-dot></span>
@@ -43,8 +43,8 @@ const addHref = pandal ? `/story?pandal=${pandal}` : '/story';
       <a class="viewer__pandal" data-v-pandal></a>
       <span class="viewer__meta" data-v-meta></span>
     </div>
-    <button class="viewer__icon" type="button" data-v-report aria-label="রিপোর্ট করুন">⚑</button>
-    <button class="viewer__icon" type="button" data-v-close aria-label="বন্ধ করুন">✕</button>
+    <button class="viewer__icon" type="button" data-v-report aria-label="রিপোর্ট করুন" data-en-aria-label="Report">⚑</button>
+    <button class="viewer__icon" type="button" data-v-close aria-label="বন্ধ করুন" data-en-aria-label="Close">✕</button>
   </header>
   <div class="viewer__stage" data-v-stage>
     <img class="viewer__img" data-v-img alt="" />
@@ -56,10 +56,12 @@ const addHref = pandal ? `/story?pandal=${pandal}` : '/story';
 <script>
   import { COMMUNITY_COLORS, getPujas, getStories } from '../scripts/api';
   import { StoryViewer, type StoryGroup } from '../scripts/story-viewer';
+  import { isEn } from '../lib/i18n';
 
   interface Meta {
     slug: string;
     nameBn: string;
+    nameEn?: string | null;
     color: string;
     href: string;
   }
@@ -79,7 +81,7 @@ const addHref = pandal ? `/story?pandal=${pandal}` : '/story';
   async function init(section: HTMLElement) {
     const meta: Meta[] = JSON.parse(section.dataset.stories!);
     const [stories, pujas] = await Promise.all([getStories(), section.dataset.community ? getPujas() : Promise.resolve(null)]);
-    (pujas ?? []).forEach((p, i) => meta.push({ slug: p.id, nameBn: p.nameBn, color: COMMUNITY_COLORS[i % COMMUNITY_COLORS.length], href: `/#puja-${p.id}` }));
+    (pujas ?? []).forEach((p, i) => meta.push({ slug: p.id, nameBn: p.nameBn, nameEn: p.nameEn, color: COMMUNITY_COLORS[i % COMMUNITY_COLORS.length], href: `/#puja-${p.id}` }));
     // pujas people typed in themselves ("অন্য পুজো") get a bubble each, by name + place
     const typed = new Map<string, { name: string; area: string }>();
     for (const s of stories ?? []) {
@@ -137,7 +139,7 @@ const addHref = pandal ? `/story?pandal=${pandal}` : '/story';
       ring.append(img);
       const name = document.createElement('span');
       name.className = 'bubble__name';
-      name.textContent = g.nameBn;
+      name.textContent = (isEn() && g.nameEn) || g.nameBn;
       const count = document.createElement('span');
       count.className = 'bubble__count';
       count.textContent = String(g.stories.length);
@@ -193,7 +195,10 @@ const addHref = pandal ? `/story?pandal=${pandal}` : '/story';
   }
 
   .stories__sub {
+    font-family: var(--font-serif);
     font-size: 0.85rem;
+    font-style: italic;
+    color: var(--ink-soft);
   }
 
   .stories__row {

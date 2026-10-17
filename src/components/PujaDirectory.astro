@@ -20,32 +20,32 @@ const looks: [FrameStyle, PaletteName][] = [
 ];
 const templates = looks.map(([frame, palette], i) => ({
   frame,
-  pandal: { slug: `tpl-${frame}`, nameBn: '__NAME__', nameEn: '', areaBn: '', photos: ['/__PHOTO__.jpg'], frame, palette } satisfies Pandal,
+  pandal: { slug: `tpl-${frame}`, nameBn: '__NAME__', nameEn: '__NAME__', areaBn: '', areaEn: '', photos: ['/__PHOTO__.jpg'], frame, palette } satisfies Pandal,
   seed: i + 10,
 }));
 const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
 ---
 
 <section id="pujas" class="dir wrap" aria-labelledby="dir-title">
-  <h2 id="dir-title" class="section-title">পাড়ায় পাড়ায় পুজো</h2>
-  <p class="section-sub">
+  <h2 id="dir-title" class="section-title" data-en="Pujas in every para">পাড়ায় পাড়ায় পুজো</h2>
+  <p class="section-sub" data-en="Every para's Thakur, all in one place">
     সবার পাড়ার ঠাকুর, এক জায়গায় <span class="en">· every para's puja, in one place</span>
   </p>
 
-  <div class="dir__filters" data-dir-filters role="group" aria-label="এলাকা বাছুন" hidden></div>
+  <div class="dir__filters" data-dir-filters role="group" aria-label="এলাকা বাছুন" data-en-aria-label="Pick an area" hidden></div>
 
   <ul class="dir__grid" data-dir-grid>
     {
       listed.map((p, i) => (
-        <li class="cp" id={p.slug} data-area={p.areaBn} style={`--tilt:${tilts[i % tilts.length]}deg`}>
-          <a class="cp__frame" href={`/pandal/${p.slug}`} aria-label={`${p.nameBn} — বিস্তারিত`}>
+        <li class="cp" id={p.slug} data-area={p.areaBn} data-area-en={p.areaEn} style={`--tilt:${tilts[i % tilts.length]}deg`}>
+          <a class="cp__frame" href={`/pandal/${p.slug}`} aria-label={`${p.nameBn} — বিস্তারিত`} data-en-aria-label={`${p.nameEn} — details`}>
             <Frame pandal={p} seed={i} />
           </a>
-          <h3 class="cp__name">{p.nameBn}</h3>
-          <p class="cp__meta">{[p.areaBn, p.themeBn && `থিম: ${p.themeBn}`].filter(Boolean).join(' · ')}</p>
+          <h3 class="cp__name" data-en={p.nameEn}>{p.nameBn}</h3>
+          <p class="cp__meta" data-en={[p.areaEn, p.themeBn && `Theme: ${p.themeEn || p.themeBn}`].filter(Boolean).join(' · ')}>{[p.areaBn, p.themeBn && `থিম: ${p.themeBn}`].filter(Boolean).join(' · ')}</p>
           <div class="cp__actions">
-            <a class="btn" href={`/pandal/${p.slug}`}>বিস্তারিত</a>
-            <a class="btn btn--red" href={`/card?pandal=${p.slug}`}>পোস্টার বানান</a>
+            <a class="btn" href={`/pandal/${p.slug}`} data-en="Details">বিস্তারিত</a>
+            <a class="btn btn--red" href={`/card?pandal=${p.slug}`} data-en="Make a poster">পোস্টার বানান</a>
           </div>
         </li>
       ))
@@ -54,10 +54,10 @@ const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
     <li class="cp cp--soon" data-soon>
       <a class="soon" href="/add">
         <span class="soon__dhak" aria-hidden="true">🪔</span>
-        <b class="soon__title">আরও পুজো আসছে…</b>
-        <span class="soon__text">পাড়ায় পাড়ায় ঠাকুর যোগ হচ্ছে। আপনার পাড়ার পুজোটা নেই? নাম আর একটা ছবি পাঠান।</span>
+        <b class="soon__title" data-en="More pujas coming…">আরও পুজো আসছে…</b>
+        <span class="soon__text" data-en="Pujas from every para are being added. Is yours missing? Send us its name and a photo.">পাড়ায় পাড়ায় ঠাকুর যোগ হচ্ছে। আপনার পাড়ার পুজোটা নেই? নাম আর একটা ছবি পাঠান।</span>
         <span class="en soon__en">More pujas coming soon — add yours</span>
-        <span class="btn btn--red soon__btn">+ আপনার পাড়ার পুজো যোগ করুন</span>
+        <span class="btn btn--red soon__btn" data-en="+ Add your para's puja">+ আপনার পাড়ার পুজো যোগ করুন</span>
       </a>
     </li>
   </ul>
@@ -73,6 +73,7 @@ const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
 
 <script>
   import { getPujas } from '../scripts/api';
+  import { tr } from '../lib/i18n';
 
   const grid = document.querySelector<HTMLUListElement>('[data-dir-grid]');
   if (grid) void init(grid);
@@ -84,15 +85,16 @@ const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
     const offset = grid.children.length;
 
     pujas.forEach((p, i) => {
+      const shown = tr(p.nameBn, p.nameEn || p.nameBn);
       const frame = looks[i % looks.length].content.cloneNode(true) as DocumentFragment;
       frame.querySelectorAll('img').forEach((img) => {
         img.src = p.url;
-        img.alt = `${p.nameBn} — ${p.areaBn}`;
+        img.alt = `${shown} — ${p.areaBn}`;
       });
       // swap the placeholder name wherever the frame prints it
       const walker = document.createTreeWalker(frame, NodeFilter.SHOW_TEXT);
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-        if (n.nodeValue?.includes('__NAME__')) n.nodeValue = n.nodeValue.replaceAll('__NAME__', p.nameBn);
+        if (n.nodeValue?.includes('__NAME__')) n.nodeValue = n.nodeValue.replaceAll('__NAME__', shown);
       }
 
       const li = document.createElement('li');
@@ -105,10 +107,10 @@ const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
       art.append(frame);
       const name = document.createElement('h3');
       name.className = 'cp__name';
-      name.textContent = p.nameBn;
+      name.textContent = shown;
       const meta = document.createElement('p');
       meta.className = 'cp__meta';
-      meta.textContent = [p.areaBn, p.themeBn && `থিম: ${p.themeBn}`].filter(Boolean).join(' · ');
+      meta.textContent = [p.areaBn, p.themeBn && `${tr('থিম', 'Theme')}: ${p.themeBn}`].filter(Boolean).join(' · ');
 
       const actions = document.createElement('div');
       actions.className = 'cp__actions';
@@ -118,13 +120,13 @@ const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
         map.href = p.mapUrl;
         map.target = '_blank';
         map.rel = 'noopener';
-        map.textContent = 'ম্যাপ';
+        map.textContent = tr('ম্যাপ', 'Map');
         actions.append(map);
       }
       const card = document.createElement('a');
       card.className = 'btn btn--red';
       card.href = `/card?puja=${encodeURIComponent(p.id)}`;
-      card.textContent = 'পোস্টার বানান';
+      card.textContent = tr('পোস্টার বানান', 'Make a poster');
       actions.append(card);
 
       li.append(art, name, meta, actions);
@@ -142,7 +144,11 @@ const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
     const cards = [...grid.querySelectorAll<HTMLElement>('.cp:not([data-soon])')];
     const soon = grid.querySelector<HTMLElement>('[data-soon]');
     const counts = new Map<string, number>();
-    cards.forEach((c) => counts.set(c.dataset.area!, (counts.get(c.dataset.area!) ?? 0) + 1));
+    const areaEn = new Map<string, string>();
+    cards.forEach((c) => {
+      counts.set(c.dataset.area!, (counts.get(c.dataset.area!) ?? 0) + 1);
+      if (c.dataset.areaEn) areaEn.set(c.dataset.area!, c.dataset.areaEn);
+    });
     if (counts.size < 2) return;
 
     const chip = (label: string, area: string | null) => {
@@ -158,7 +164,10 @@ const tilts = [-1.5, 1.2, -0.6, 1.8, -1];
       });
       return b;
     };
-    box.append(chip(`সব (${cards.length})`, null), ...[...counts].sort((a, b) => b[1] - a[1]).map(([area, n]) => chip(`${area} (${n})`, area)));
+    box.append(
+      chip(`${tr('সব', 'All')} (${cards.length})`, null),
+      ...[...counts].sort((a, b) => b[1] - a[1]).map(([area, n]) => chip(`${tr(area, areaEn.get(area) ?? area)} (${n})`, area)),
+    );
     box.hidden = false;
   }
 </script>

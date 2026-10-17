@@ -21,20 +21,21 @@ const frameMax = pandal.frame === 'alpona' ? 400 : pandal.frame === 'pujabarshik
 ---
 
 <article class={`card card--${layout}`} id={pandal.slug} style={`--soft:${p.soft};--accent:${p.bg};--deep:${p.deep};--tilt:${tilt}deg;--frame-max:${frameMax}px`}>
-  <a class="card__frame" href={`/pandal/${pandal.slug}`} aria-label={`${pandal.nameBn} — বিস্তারিত`}>
+  <a class="card__frame" href={`/pandal/${pandal.slug}`} aria-label={`${pandal.nameBn} — বিস্তারিত`} data-en-aria-label={`${pandal.nameEn} — details`}>
     <span class="card__blob" aria-hidden="true"></span>
     <Frame pandal={pandal} seed={index} />
   </a>
 
   <div class="card__note">
-    <span class="card__num" aria-hidden="true">{toBnDigits(index + 1)}</span>
-    {pandal.sample && <span class="card__sample">নমুনা · sample</span>}
-    <h3 class="card__name">{pandal.nameBn}</h3>
+    <span class="card__num" aria-hidden="true" data-en={String(index + 1)}>{toBnDigits(index + 1)}</span>
+    {pandal.sample && <span class="card__sample" data-en="Sample">নমুনা · sample</span>}
+    <h3 class="card__name" data-en={pandal.nameEn}>{pandal.nameBn}</h3>
     <p class="en card__name-en">{pandal.nameEn}{pandal.since && ` · since ${pandal.since}`}</p>
+    {pandal.since && <p class="card__since" data-en={`Since ${pandal.since}`} />}
     {
       pandal.themeBn && (
         <p class="card__theme">
-          <span class="card__label">থিম</span> {pandal.themeBn}
+          <span class="card__label" data-en="Theme">থিম</span> <span data-en={pandal.themeEn}>{pandal.themeBn}</span>
           {pandal.themeEn && <span class="en"> — {pandal.themeEn}</span>}
         </p>
       )
@@ -44,12 +45,12 @@ const frameMax = pandal.frame === 'alpona' ? 400 : pandal.frame === 'pujabarshik
       <VisitButton slug={pandal.slug} />
       {
         pandal.mapUrl && (
-          <a class="btn btn--yellow" href={pandal.mapUrl} target="_blank" rel="noopener">
+          <a class="btn btn--yellow" href={pandal.mapUrl} target="_blank" rel="noopener" data-en="How do I get there?">
             যাব কীভাবে?
           </a>
         )
       }
-      <a class="card__more" href={`/pandal/${pandal.slug}`}>সব ছবি →</a>
+      <a class="card__more" href={`/pandal/${pandal.slug}`} data-en="All photos →">সব ছবি →</a>
     </div>
     <CrowdMeter slug={pandal.slug} />
   </div>
@@ -123,8 +124,14 @@ const frameMax = pandal.frame === 'alpona' ? 400 : pandal.frame === 'pujabarshik
     color: var(--deep);
   }
 
-  .card__name-en {
+  .card__name-en,
+  .card__since {
     margin: 2px 0 12px;
+  }
+
+  /* only filled in English, where the line above is hidden */
+  .card__since:empty {
+    display: none;
   }
 
   .card__label {

@@ -1,21 +1,22 @@
 ---
 import { tithis } from '../data/site';
 import { bnDateRange, toBnDigits } from '../lib/bangla';
+import { enDateRange } from '../lib/i18n';
 
 const days = tithis.filter((t) => t.key !== 'mahalaya');
 ---
 
 <section class="tithi" aria-labelledby="tithi-title">
   <div class="wrap">
-    <h2 id="tithi-title" class="tithi__status" data-tithi-status>ষষ্ঠী থেকে দশমী</h2>
+    <h2 id="tithi-title" class="tithi__status" data-tithi-status data-en="Shashthi to Dashami">ষষ্ঠী থেকে দশমী</h2>
     <ol class="tithi__days">
       {
         days.map((t, i) => (
           <li class="tithi__day" data-first={t.dates[0]} data-last={t.dates[t.dates.length - 1]} style={`--tilt:${[-2, 1.5, -1, 2, -1.5][i]}deg`}>
-            <span class="tithi__name">{t.bn}</span>
-            <span class="tithi__date">{bnDateRange(t.dates)}</span>
+            <span class="tithi__name" data-en={t.en}>{t.bn}</span>
+            <span class="tithi__date" data-en={enDateRange(t.dates)}>{bnDateRange(t.dates)}</span>
             <span class="en tithi__en">{t.en}</span>
-            <span class="tithi__today">আজ</span>
+            <span class="tithi__today" data-en="Today">আজ</span>
           </li>
         ))
       }
@@ -29,6 +30,12 @@ const days = tithis.filter((t) => t.key !== 'mahalaya');
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   const status = document.querySelector('[data-tithi-status]');
   const day = days.find((d) => d.dates.includes(today));
+  const en = document.documentElement.lang === 'en';
+  // the English swap runs after this script — keep it from putting the build-time line back
+  const say = (bnText, enText) => {
+    status.textContent = en ? enText : bnText;
+    status.removeAttribute('data-en');
+  };
 
   document.querySelectorAll('[data-first]').forEach((el) => {
     if (el.dataset.first <= today && today <= el.dataset.last) el.classList.add('is-today');
@@ -36,12 +43,12 @@ const days = tithis.filter((t) => t.key !== 'mahalaya');
   });
 
   if (day) {
-    status.textContent = `আজ ${day.bn} — চলো ঠাকুর দেখতে!`;
+    say(`আজ ${day.bn} — চলো ঠাকুর দেখতে!`, `Today is ${day.en} — let's go pandal hopping!`);
   } else if (today < first) {
     const diff = Math.round((Date.parse(first) - Date.parse(today)) / 86400000);
-    status.textContent = `পুজো আসতে আর ${bn(diff)} দিন`;
+    say(`পুজো আসতে আর ${bn(diff)} দিন`, `Just ${diff} day${diff === 1 ? '' : 's'} to Puja`);
   } else if (today > last) {
-    status.textContent = 'আসছে বছর আবার হবে…';
+    say('আসছে বছর আবার হবে…', 'See you next year…');
   }
 </script>
 
@@ -90,6 +97,11 @@ const days = tithis.filter((t) => t.key !== 'mahalaya');
     line-height: 1.2;
   }
 
+  /* "Shashthi" in signboard lettering is wider than ষষ্ঠী — keep it inside the slip */
+  :global(html[data-lang='en']) .tithi__name {
+    font-size: 1.35rem;
+  }
+
   .tithi__date {
     font-weight: 600;
   }
@@ -116,6 +128,10 @@ const days = tithis.filter((t) => t.key !== 'mahalaya');
   .tithi__day.is-today {
     background: var(--haldi);
     transform: rotate(0) scale(1.06);
+  }
+
+  .tithi__day.is-today .tithi__en {
+    color: var(--ink);
   }
 
   .tithi__day.is-today .tithi__today {

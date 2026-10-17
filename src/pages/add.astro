@@ -4,69 +4,70 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout
   title="আপনার পাড়ার পুজো যোগ করুন"
+  titleEn="Add your para's puja"
   description="আপনার পাড়ার দুর্গাপুজোর নাম আর একটা ছবি পাঠান — পাড়ার পুজোয় যোগ হবে, সবাই দেখতে পাবে। Add your para's Durga Puja to Parar Pujo."
   og="add"
   ogAlt="আপনার পাড়ার পুজো যোগ করুন — পাড়ার পুজো"
 >
   <section class="add wrap">
-    <h1 class="section-title">আপনার পাড়ার পুজো যোগ করুন</h1>
-    <p class="section-sub">
+    <h1 class="section-title" data-en="Add your para's puja">আপনার পাড়ার পুজো যোগ করুন</h1>
+    <p class="section-sub" data-en="Is your puja missing from our list? Send us its name and a photo.">
       আমাদের তালিকায় আপনার পুজো নেই? নাম আর একটা ছবি পাঠান <span class="en">· add your para's puja</span>
     </p>
 
     <form class="add__form" data-add-form novalidate>
       <fieldset>
-        <legend>পুজোর নাম</legend>
-        <input type="text" name="nameBn" maxlength="40" required placeholder="বাংলায় — যেমন: নবীন সংঘ সার্বজনীন" />
+        <legend data-en="Puja name">পুজোর নাম</legend>
+        <input type="text" name="nameBn" maxlength="40" required placeholder="বাংলায় — যেমন: নবীন সংঘ সার্বজনীন" data-en-placeholder="Puja name — in Bangla if you can" />
         <input type="text" name="nameEn" maxlength="40" placeholder="In English (optional) — e.g. Nabin Sangha" />
       </fieldset>
 
       <fieldset>
-        <legend>কোথায়?</legend>
-        <input type="text" name="areaBn" maxlength="30" required placeholder="পাড়া / এলাকা — যেমন: ঘোষপুর, শ্রীরামপুর" />
-        <input type="url" name="mapUrl" maxlength="300" inputmode="url" placeholder="গুগল ম্যাপের Share লিংক (ইচ্ছে হলে)" />
-        <p class="hint">Google Maps-এ পুজোটা খুঁজে "Share" চাপুন, লিংকটা এখানে দিন।</p>
+        <legend data-en="Where is it?">কোথায়?</legend>
+        <input type="text" name="areaBn" maxlength="30" required placeholder="পাড়া / এলাকা — যেমন: ঘোষপুর, শ্রীরামপুর" data-en-placeholder="Para / area — e.g. Ghoshpur, Serampore" />
+        <input type="url" name="mapUrl" maxlength="300" inputmode="url" placeholder="গুগল ম্যাপের Share লিংক (ইচ্ছে হলে)" data-en-placeholder="Google Maps Share link (optional)" />
+        <p class="hint" data-en="Find the puja on Google Maps, tap “Share” and paste the link here.">Google Maps-এ পুজোটা খুঁজে "Share" চাপুন, লিংকটা এখানে দিন।</p>
       </fieldset>
 
       <fieldset>
-        <legend>এবারের থিম <span class="en">(optional)</span></legend>
-        <input type="text" name="themeBn" maxlength="40" placeholder="যেমন: মাটির গন্ধ" />
+        <legend data-en="This year's theme (optional)">এবারের থিম <span class="en">(optional)</span></legend>
+        <input type="text" name="themeBn" maxlength="40" placeholder="যেমন: মাটির গন্ধ" data-en-placeholder="e.g. The smell of earth" />
       </fieldset>
 
       <fieldset>
-        <legend>প্যান্ডেল বা ঠাকুরের ছবি</legend>
+        <legend data-en="A photo of the pandal or Thakur">প্যান্ডেল বা ঠাকুরের ছবি</legend>
         <label class="pick">
           <input type="file" accept="image/*" name="photo-file" required />
           <img class="pick__preview" data-preview alt="" hidden />
-          <span class="pick__text" data-pick-text>📷 ছবি বাছুন</span>
+          <span class="pick__text" data-pick-text data-en="📷 Choose a photo">📷 ছবি বাছুন</span>
         </label>
       </fieldset>
 
       <fieldset>
-        <legend>আপনার নাম <span class="en">(optional)</span></legend>
-        <input type="text" name="submitter" maxlength="30" placeholder="যেমন: পাড়ার রাজু" />
+        <legend data-en="Your name (optional)">আপনার নাম <span class="en">(optional)</span></legend>
+        <input type="text" name="submitter" maxlength="30" placeholder="যেমন: পাড়ার রাজু" data-en-placeholder="e.g. Raju from the para" />
       </fieldset>
 
       <label class="consent">
         <input type="checkbox" name="consent" value="yes" required />
-        <span>তথ্যগুলো ঠিক, আর ছবিটা আমার তোলা (বা তোলার অনুমতি আছে)।</span>
+        <span data-en="These details are right, and I took this photo (or have permission to use it).">তথ্যগুলো ঠিক, আর ছবিটা আমার তোলা (বা তোলার অনুমতি আছে)।</span>
       </label>
-      <p class="hint">দেখে নিয়ে সাইটে যোগ করা হবে — সাধারণত কয়েক ঘণ্টার মধ্যে।</p>
+      <p class="hint" data-en="We'll check it and add it to the site — usually within a few hours.">দেখে নিয়ে সাইটে যোগ করা হবে — সাধারণত কয়েক ঘণ্টার মধ্যে।</p>
 
       <p class="add__error" data-add-error role="alert" hidden></p>
       <button class="btn btn--red add__go" type="submit" data-add-go>
-        <span data-add-label>পাঠিয়ে দিন</span>
+        <span data-add-label data-en="Send it">পাঠিয়ে দিন</span>
         <span class="add__bar" aria-hidden="true"><i data-add-bar></i></span>
       </button>
     </form>
 
     <div class="done" data-add-done hidden>
-      <p class="done__big">পাঠানো হয়েছে! 🙏</p>
-      <p>দেখে নিয়েই আপনার পুজো পাড়ার পুজোয় যোগ হয়ে যাবে। ততক্ষণ নিজের পুজোর পোস্টার বানিয়ে ফেলুন!</p>
+      <p class="done__big" data-en="Sent! 🙏">পাঠানো হয়েছে! 🙏</p>
+      <p data-en="Once we've checked it, your puja joins Parar Pujo. Meanwhile, make a poster for it!">দেখে নিয়েই আপনার পুজো পাড়ার পুজোয় যোগ হয়ে যাবে। ততক্ষণ নিজের পুজোর পোস্টার বানিয়ে ফেলুন!</p>
       <p class="en">Thanks! It'll be listed once approved. Meanwhile, make a poster for your puja.</p>
       <div class="done__actions">
-        <a class="btn btn--yellow" href="/card" data-card-link>পোস্টার বানান</a>
-        <a class="btn" href="/">পাড়ার পুজোয় ফিরুন</a>
+        <a class="btn btn--yellow" href="/card" data-card-link data-en="Make a poster">পোস্টার বানান</a>
+        <a class="btn" href="/" data-en="Back to Parar Pujo">পাড়ার পুজোয় ফিরুন</a>
       </div>
     </div>
   </section>
@@ -75,6 +76,7 @@ import Layout from '../layouts/Layout.astro';
 <script>
   import { ApiError } from '../scripts/api';
   import { compressPhoto, type Compressed } from '../scripts/compress';
+  import { tr } from '../lib/i18n';
 
   const form = document.querySelector<HTMLFormElement>('[data-add-form]')!;
   const fileInput = form.elements.namedItem('photo-file') as HTMLInputElement;
@@ -97,18 +99,18 @@ import Layout from '../layouts/Layout.astro';
     const file = fileInput.files?.[0];
     errorBox.hidden = true;
     if (!file) return;
-    pickText.textContent = 'ছবি তৈরি হচ্ছে…';
+    pickText.textContent = tr('ছবি তৈরি হচ্ছে…', 'Getting the photo ready…');
     try {
       if (photo) URL.revokeObjectURL(photo.previewUrl);
       photo = await compressPhoto(file);
       preview.src = photo.previewUrl;
       preview.hidden = false;
-      pickText.textContent = '✓ ছবি বদলাতে চাপুন';
+      pickText.textContent = tr('✓ ছবি বদলাতে চাপুন', '✓ Tap to change the photo');
     } catch {
       photo = null;
       preview.hidden = true;
-      pickText.textContent = '📷 ছবি বাছুন';
-      showError('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।');
+      pickText.textContent = tr('📷 ছবি বাছুন', '📷 Choose a photo');
+      showError(tr('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।', "This photo won't open — try another one."));
     }
   });
 
@@ -116,10 +118,10 @@ import Layout from '../layouts/Layout.astro';
     e.preventDefault();
     errorBox.hidden = true;
     const fd = new FormData(form);
-    if (!String(fd.get('nameBn')).trim()) return showError('পুজোর নামটা লিখুন।');
-    if (!String(fd.get('areaBn')).trim()) return showError('কোন পাড়া / এলাকা, লিখুন।');
-    if (!photo) return showError('একটা ছবি বাছুন।');
-    if (fd.get('consent') !== 'yes') return showError('সম্মতিতে টিক দিন।');
+    if (!String(fd.get('nameBn')).trim()) return showError(tr('পুজোর নামটা লিখুন।', 'Write the name of the puja.'));
+    if (!String(fd.get('areaBn')).trim()) return showError(tr('কোন পাড়া / এলাকা, লিখুন।', 'Write the para / area.'));
+    if (!photo) return showError(tr('একটা ছবি বাছুন।', 'Choose a photo.'));
+    if (fd.get('consent') !== 'yes') return showError(tr('সম্মতিতে টিক দিন।', 'Tick the consent box first.'));
 
     const body = new FormData();
     for (const k of ['nameBn', 'nameEn', 'areaBn', 'mapUrl', 'themeBn', 'submitter']) body.set(k, String(fd.get(k) ?? ''));
@@ -127,13 +129,13 @@ import Layout from '../layouts/Layout.astro';
     body.set('photo', photo.blob, 'puja.jpg');
 
     go.disabled = true;
-    label.textContent = 'পাঠানো হচ্ছে…';
+    label.textContent = tr('পাঠানো হচ্ছে…', 'Sending…');
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/pujas');
     xhr.upload.onprogress = (ev) => ev.lengthComputable && (bar.style.width = `${Math.round((ev.loaded / ev.total) * 100)}%`);
     xhr.onloadend = () => {
       go.disabled = false;
-      label.textContent = 'পাঠিয়ে দিন';
+      label.textContent = tr('পাঠিয়ে দিন', 'Send it');
       bar.style.width = '0';
       let res: { error?: string; message?: string } = {};
       try {

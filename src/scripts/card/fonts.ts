@@ -14,20 +14,21 @@ import notoLa from '@fontsource/noto-serif-bengali/files/noto-serif-bengali-lati
 export interface FontStyle {
   id: string;
   bn: string; // what it's called in the picker
+  en: string; // and in English: the typeface's own name
   family: string; // CSS family name used on canvas
   weight: number;
   files?: { bengali: string; latin: string }; // absent = already loaded site-wide
 }
 
 export const FONTS: FontStyle[] = [
-  { id: 'galada', bn: 'সাইনবোর্ড', family: 'Galada', weight: 400 },
-  { id: 'tiro', bn: 'বইয়ের ছাপা', family: 'Tiro Bangla', weight: 400 },
-  { id: 'hind', bn: 'সোজা-সাপটা', family: 'Hind Siliguri', weight: 600 },
-  { id: 'atma', bn: 'গোলগাল', family: 'PP Atma', weight: 700, files: { bengali: atmaBn, latin: atmaLa } },
-  { id: 'mina', bn: 'মোটা পোস্টার', family: 'PP Mina', weight: 700, files: { bengali: minaBn, latin: minaLa } },
-  { id: 'baloo', bn: 'বাবলি', family: 'PP Baloo', weight: 800, files: { bengali: balooBn, latin: balooLa } },
-  { id: 'anek', bn: 'হেডলাইন', family: 'PP Anek', weight: 800, files: { bengali: anekBn, latin: anekLa } },
-  { id: 'noto', bn: 'ক্লাসিক', family: 'PP Noto Serif', weight: 700, files: { bengali: notoBn, latin: notoLa } },
+  { id: 'galada', bn: 'সাইনবোর্ড', en: 'Galada', family: 'Galada', weight: 400 },
+  { id: 'tiro', bn: 'বইয়ের ছাপা', en: 'Tiro Bangla', family: 'Tiro Bangla', weight: 400 },
+  { id: 'hind', bn: 'সোজা-সাপটা', en: 'Hind Siliguri', family: 'Hind Siliguri', weight: 600 },
+  { id: 'atma', bn: 'গোলগাল', en: 'Atma', family: 'PP Atma', weight: 700, files: { bengali: atmaBn, latin: atmaLa } },
+  { id: 'mina', bn: 'মোটা পোস্টার', en: 'Mina', family: 'PP Mina', weight: 700, files: { bengali: minaBn, latin: minaLa } },
+  { id: 'baloo', bn: 'বাবলি', en: 'Baloo Da', family: 'PP Baloo', weight: 800, files: { bengali: balooBn, latin: balooLa } },
+  { id: 'anek', bn: 'হেডলাইন', en: 'Anek Bangla', family: 'PP Anek', weight: 800, files: { bengali: anekBn, latin: anekLa } },
+  { id: 'noto', bn: 'ক্লাসিক', en: 'Noto Serif', family: 'PP Noto Serif', weight: 700, files: { bengali: notoBn, latin: notoLa } },
 ];
 
 export const fontById = (id: string) => FONTS.find((f) => f.id === id) ?? FONTS[0];

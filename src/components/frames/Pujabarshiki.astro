@@ -27,8 +27,8 @@ const p = palettes[pandal.palette];
   </div>
 
   <footer class="cover__foot">
-    <span class="cover__name">{pandal.nameBn}</span>
-    {pandal.themeBn && <span class="cover__theme">এবারের থিম: {pandal.themeBn}</span>}
+    <span class="cover__name" data-en={pandal.nameEn}>{pandal.nameBn}</span>
+    {pandal.themeBn && <span class="cover__theme" data-en={`This year's theme: ${pandal.themeEn ?? pandal.themeBn}`}>এবারের থিম: {pandal.themeBn}</span>}
   </footer>
 
   <span class="cover__price" aria-hidden="true">দাম<br />ভালোবাসা</span>

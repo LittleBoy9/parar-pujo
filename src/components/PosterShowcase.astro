@@ -13,34 +13,34 @@ const samples = withPhotos.slice(0, 2).map((p) => ({
   palette: palettes[p.palette],
 }));
 const features = [
-  ['🤳', 'সেলফি + প্যান্ডেল', 'এক পোস্টারে কয়েকটা ছবি'],
-  ['✍️', 'নিজের বাংলা লেখা', '৮ রকম ফন্ট, যেকোনো রং'],
-  ['🪔', 'স্টিকার', 'ঢাক, প্রদীপ, শিউলি, মায়ের চোখ…'],
-  ['📱', 'স্টোরি · পোস্ট · ডিপি', 'যেখানে খুশি শেয়ার'],
+  ['🤳', 'সেলফি + প্যান্ডেল', 'এক পোস্টারে কয়েকটা ছবি', 'Selfie + pandal', 'Several photos, one poster'],
+  ['✍️', 'নিজের বাংলা লেখা', '৮ রকম ফন্ট, যেকোনো রং', 'Your own Bangla words', '8 fonts, any colour'],
+  ['🪔', 'স্টিকার', 'ঢাক, প্রদীপ, শিউলি, মায়ের চোখ…', 'Stickers', "Dhak, diya, shiuli, Maa's eyes…"],
+  ['📱', 'স্টোরি · পোস্ট · ডিপি', 'যেখানে খুশি শেয়ার', 'Story · post · DP', 'Share it anywhere'],
 ];
 ---
 
 <section class="showcase" aria-labelledby="showcase-title">
   <div class="wrap showcase__inner">
     <div class="showcase__head">
-      <p class="showcase__kicker">নতুন ✨</p>
-      <h2 id="showcase-title" class="showcase__title">পুজো পরিক্রমার পোস্টার</h2>
-      <p class="showcase__sub">ঠাকুর দেখতে বেরিয়ে সেলফি তুলুন, প্যান্ডেলের ছবি দিন, নিজের মতো লিখে সাজান — তারপর স্টোরিতে দিন!</p>
+      <p class="showcase__kicker" data-en="New ✨">নতুন ✨</p>
+      <h2 id="showcase-title" class="showcase__title" data-en="Your pandal-hopping poster">পুজো পরিক্রমার পোস্টার</h2>
+      <p class="showcase__sub" data-en="Snap a selfie while pandal hopping, add the pandal photos, write your own lines — then put it on your story!">ঠাকুর দেখতে বেরিয়ে সেলফি তুলুন, প্যান্ডেলের ছবি দিন, নিজের মতো লিখে সাজান — তারপর স্টোরিতে দিন!</p>
     </div>
 
     <div class="showcase__body">
       <ul class="showcase__features">
         {
-          features.map(([icon, bn, sub]) => (
+          features.map(([icon, bn, sub, en, subEn]) => (
             <li>
               <span aria-hidden="true">{icon}</span>
-              <b>{bn}</b>
-              <small>{sub}</small>
+              <b data-en={en}>{bn}</b>
+              <small data-en={subEn}>{sub}</small>
             </li>
           ))
         }
       </ul>
-      <a class="btn btn--red showcase__cta" href="/card">আমার পোস্টার বানাই →</a>
+      <a class="btn btn--red showcase__cta" href="/card" data-en="Make my poster →">আমার পোস্টার বানাই →</a>
     </div>
 
     <div class="showcase__fan" data-showcase={JSON.stringify({ samples, tithis, yearBn: site.yearBn })} aria-hidden="true">

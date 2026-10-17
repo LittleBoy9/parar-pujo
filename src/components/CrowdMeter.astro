@@ -6,23 +6,23 @@ interface Props {
 
 const { slug } = Astro.props;
 const levels = [
-  { level: 1, bn: 'ফাঁকা', emoji: '🙂' },
-  { level: 2, bn: 'মাঝারি', emoji: '😅' },
-  { level: 3, bn: 'ঠাসা ভিড়', emoji: '🥵' },
+  { level: 1, bn: 'ফাঁকা', en: 'Quiet', emoji: '🙂' },
+  { level: 2, bn: 'মাঝারি', en: 'Busy', emoji: '😅' },
+  { level: 3, bn: 'ঠাসা ভিড়', en: 'Packed', emoji: '🥵' },
 ];
 ---
 
 <div class="crowd" data-crowd={slug} hidden>
   <p class="crowd__now" data-crowd-now>
     <span class="crowd__gauge" aria-hidden="true"><i></i><i></i><i></i></span>
-    <span data-crowd-text>ভিড় কেমন? এখনও কেউ বলেনি</span>
+    <span data-crowd-text data-en="How crowded? No one's said yet">ভিড় কেমন? এখনও কেউ বলেনি</span>
   </p>
-  <div class="crowd__vote" role="group" aria-label="এখন ভিড় কেমন? — you there? tell us">
-    <span class="crowd__ask">ওখানে আছেন? বলুন:</span>
+  <div class="crowd__vote" role="group" aria-label="এখন ভিড় কেমন? — you there? tell us" data-en-aria-label="How crowded is it right now? Tell us if you're there">
+    <span class="crowd__ask" data-en="There right now? Tell us:">ওখানে আছেন? বলুন:</span>
     {
       levels.map((l) => (
         <button type="button" data-level={l.level} aria-pressed="false">
-          <span aria-hidden="true">{l.emoji}</span> {l.bn}
+          <span aria-hidden="true">{l.emoji}</span> <span data-en={l.en}>{l.bn}</span>
         </button>
       ))
     }
@@ -31,7 +31,7 @@ const levels = [
 
 <script>
   import { CROWD_LABELS, getCrowd, timeAgo, voteCrowd, type CrowdLevel } from '../scripts/api';
-  import { toBnDigits } from '../lib/bangla';
+  import { num, tr } from '../lib/i18n';
 
   const MINE_KEY = 'parar-pujo:my-crowd:v1';
   const FRESH = 45 * 60 * 1000;
@@ -65,10 +65,13 @@ const levels = [
         el.dataset.level = level ? String(level) : '';
         if (r) {
           const l = CROWD_LABELS[r.level];
-          text.textContent = `এখন: ${l.bn} ${l.emoji} · ${toBnDigits(r.votes)} জন বলেছেন · ${timeAgo(r.latest)}`;
+          text.textContent = tr(
+            `এখন: ${l.bn} ${l.emoji} · ${num(r.votes)} জন বলেছেন · ${timeAgo(r.latest)}`,
+            `Now: ${l.en} ${l.emoji} · ${num(r.votes)} ${r.votes === 1 ? 'person' : 'people'} said so · ${timeAgo(r.latest)}`,
+          );
         } else if (myFresh) {
           const l = CROWD_LABELS[myFresh.level];
-          text.textContent = `এখন: ${l.bn} ${l.emoji} · আপনি বললেন`;
+          text.textContent = tr(`এখন: ${l.bn} ${l.emoji} · আপনি বললেন`, `Now: ${l.en} ${l.emoji} · you said so`);
         }
         buttons.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.level) === myFresh?.level)));
       };

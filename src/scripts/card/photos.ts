@@ -1,13 +1,14 @@
 // Getting people's photos ready for the poster: right way up, sensible size, optional filter.
 import { SIGN, UI } from './kit';
+import { tr } from '../../lib/i18n';
 
 export type Filter = 'none' | 'bright' | 'bw' | 'vintage';
 
-export const FILTERS: { id: Filter; bn: string }[] = [
-  { id: 'none', bn: 'স্বাভাবিক' },
-  { id: 'bright', bn: 'ঝলমলে' },
-  { id: 'bw', bn: 'সাদা-কালো' },
-  { id: 'vintage', bn: 'পুরনো দিন' },
+export const FILTERS: { id: Filter; bn: string; en: string }[] = [
+  { id: 'none', bn: 'স্বাভাবিক', en: 'Normal' },
+  { id: 'bright', bn: 'ঝলমলে', en: 'Bright' },
+  { id: 'bw', bn: 'সাদা-কালো', en: 'B&W' },
+  { id: 'vintage', bn: 'পুরনো দিন', en: 'Vintage' },
 ];
 
 const MAX_SIDE = 1600; // plenty for a 1080-wide poster, and keeps editing smooth
@@ -115,7 +116,7 @@ export function slotPlaceholder(label: string, bg: string, ink: string): HTMLCan
   ctx.fillStyle = ink;
   ctx.textAlign = 'center';
   ctx.font = `110px ${SIGN}`;
-  ctx.fillText('ছবি দিন', 450, 820);
+  ctx.fillText(tr('ছবি দিন', 'Add a photo'), 450, 820);
   ctx.font = `600 48px ${UI}`;
   ctx.fillText(label, 450, 900);
   return c;

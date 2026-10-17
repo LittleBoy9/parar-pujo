@@ -118,6 +118,23 @@ h3 {
   color: var(--ink-soft);
 }
 
+/* English mode (src/lib/i18n.ts): the English sub-lines repeat what the main text now says */
+html[data-lang='en'] .en {
+  display: none !important;
+}
+
+/* hold the first paint until the translations are in — but never longer than a moment */
+html[data-lang='en']:not(.i18n-done) body {
+  visibility: hidden;
+  animation: i18n-show 0s 1.2s forwards;
+}
+
+@keyframes i18n-show {
+  to {
+    visibility: visible;
+  }
+}
+
 .section-title {
   font-family: var(--font-sign);
   font-size: clamp(2.2rem, 7vw, 3.6rem);

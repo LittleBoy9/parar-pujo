@@ -54,13 +54,13 @@ const lights = Array.from({ length: 22 }, (_, i) => ({ x: 596 + i * 6.2, y: 286 
   }
 
   <div class="hero__text wrap">
-    <p class="hero__kicker">দুর্গাপুজো · শারদীয়া {site.yearBn}</p>
-    <h1 class="hero__title">{site.titleBn}</h1>
-    <p class="hero__tag">{site.taglineBn}</p>
+    <p class="hero__kicker" data-en={`Durga Puja · Sharodiya ${site.yearEn}`}>দুর্গাপুজো · শারদীয়া {site.yearBn}</p>
+    <h1 class="hero__title" data-en={site.titleEn}>{site.titleBn}</h1>
+    <p class="hero__tag" data-en={site.taglineEn}>{site.taglineBn}</p>
     <p class="en hero__tag-en">{site.taglineEn}</p>
     <div class="hero__ctas">
-      <a href="/card" class="btn btn--red hero__main">✨ নিজের পুজোর পোস্টার বানান</a>
-      <a href="#pujas" class="btn">পাড়ায় পাড়ায় পুজো →</a>
+      <a href="/card" class="btn btn--red hero__main" data-en="✨ Make your own puja poster">✨ নিজের পুজোর পোস্টার বানান</a>
+      <a href="#pujas" class="btn" data-en="Every para's puja →">পাড়ায় পাড়ায় পুজো →</a>
     </div>
     <div class="hero__by">
       <CreatorChip />
@@ -124,7 +124,7 @@ const lights = Array.from({ length: 22 }, (_, i) => ({ x: 596 + i * 6.2, y: 286 
 
   <div class="hero__dhak">
     <DhakButton autostart />
-    <span class="hero__dhak-hint" data-dhak-hint>ঢাক বাজান!</span>
+    <span class="hero__dhak-hint" data-dhak-hint data-en="Play the dhak!">ঢাক বাজান!</span>
   </div>
 
   <!-- shiuli drifting down -->
@@ -140,10 +140,12 @@ const lights = Array.from({ length: 22 }, (_, i) => ({ x: 596 + i * 6.2, y: 286 
 </section>
 
 <script>
+  import { tr } from '../lib/i18n';
+
   // the little label under the dhak follows what it's doing
   const hint = document.querySelector<HTMLElement>('[data-dhak-hint]');
   document.addEventListener('dhak:change', (e) => {
-    if (hint) hint.textContent = (e as CustomEvent<boolean>).detail ? 'ঢাক বাজছে · থামাতে চাপুন' : 'ঢাক বাজান!';
+    if (hint) hint.textContent = (e as CustomEvent<boolean>).detail ? tr('ঢাক বাজছে · থামাতে চাপুন', 'Dhak playing · tap to stop') : tr('ঢাক বাজান!', 'Play the dhak!');
   });
 </script>
 

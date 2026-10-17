@@ -2,22 +2,26 @@
 // WhatsApp first — that's where para news actually travels.
 interface Props {
   text: string;
+  /** the same message for visitors who switched to English */
+  textEn?: string;
 }
 
-const { text } = Astro.props;
+const { text, textEn } = Astro.props;
 ---
 
-<div class="share" data-share-text={text}>
-  <span class="share__label">পাড়ায় ছড়িয়ে দিন:</span>
+<div class="share" data-share-text={text} data-share-text-en={textEn}>
+  <span class="share__label" data-en="Spread the word:">পাড়ায় ছড়িয়ে দিন:</span>
   <a class="share__btn share__btn--wa" data-share-wa href="https://wa.me/" target="_blank" rel="noopener">WhatsApp</a>
-  <button class="share__btn" type="button" data-share-native hidden>শেয়ার</button>
-  <button class="share__btn" type="button" data-share-copy>লিংক কপি</button>
+  <button class="share__btn" type="button" data-share-native hidden data-en="Share">শেয়ার</button>
+  <button class="share__btn" type="button" data-share-copy data-en="Copy link">লিংক কপি</button>
 </div>
 
 <script>
+  import { tr } from '../lib/i18n';
+
   document.querySelectorAll<HTMLElement>('[data-share-text]').forEach((box) => {
     const url = location.href.split('#')[0];
-    const text = box.dataset.shareText!;
+    const text = tr(box.dataset.shareText!, box.dataset.shareTextEn ?? box.dataset.shareText!);
     const wa = box.querySelector<HTMLAnchorElement>('[data-share-wa]')!;
     wa.href = `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
 
@@ -31,7 +35,7 @@ const { text } = Astro.props;
     copy.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(url);
-        copy.textContent = 'কপি হয়েছে ✓';
+        copy.textContent = tr('কপি হয়েছে ✓', 'Copied ✓');
       } catch {
         copy.textContent = url;
       }

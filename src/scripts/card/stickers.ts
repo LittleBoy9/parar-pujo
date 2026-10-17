@@ -4,6 +4,7 @@
 export interface Sticker {
   id: string;
   bn: string;
+  en: string;
   draw(ctx: CanvasRenderingContext2D): void;
 }
 
@@ -21,6 +22,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'dhak',
     bn: 'ঢাক',
+    en: 'Dhak',
     draw(ctx) {
       line(ctx);
       ctx.fillStyle = '#fffaf0';
@@ -56,6 +58,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'prodip',
     bn: 'প্রদীপ',
+    en: 'Diya',
     draw(ctx) {
       const glow = ctx.createRadialGradient(0, -22, 2, 0, -22, 42);
       glow.addColorStop(0, 'rgba(255,220,120,.9)');
@@ -90,6 +93,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'shiuli',
     bn: 'শিউলি',
+    en: 'Shiuli',
     draw(ctx) {
       const flower = (x: number, y: number, s: number, rot: number) => {
         ctx.save();
@@ -119,6 +123,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'kash',
     bn: 'কাশফুল',
+    en: 'Kash flower',
     draw(ctx) {
       for (const [x, lean, h] of [[-18, -14, 92], [0, 4, 100], [18, 18, 86]]) {
         ctx.strokeStyle = '#6e7a3a';
@@ -145,6 +150,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'chokh',
     bn: 'মায়ের চোখ',
+    en: "Maa's eyes",
     draw(ctx) {
       line(ctx, 5);
       ctx.fillStyle = '#fffaf0';
@@ -174,6 +180,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'shankha',
     bn: 'শাঁখ',
+    en: 'Conch',
     draw(ctx) {
       line(ctx, 3);
       ctx.fillStyle = '#fffaf0';
@@ -200,6 +207,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'dhunuchi',
     bn: 'ধুনুচি',
+    en: 'Dhunuchi',
     draw(ctx) {
       ctx.strokeStyle = 'rgba(120,120,120,.55)';
       ctx.lineWidth = 5;
@@ -234,6 +242,7 @@ export const STICKERS: Sticker[] = [
   {
     id: 'padma',
     bn: 'পদ্ম',
+    en: 'Lotus',
     draw(ctx) {
       line(ctx, 2);
       const petal = (rot: number, len: number, color: string) => {

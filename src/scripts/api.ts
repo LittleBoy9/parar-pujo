@@ -1,6 +1,6 @@
 // Browser-side client for the Worker API. Every call fails soft: if the API is
 // unreachable (e.g. plain `astro dev`), features hide themselves instead of breaking.
-import { toBnDigits } from '../lib/bangla';
+import { isEn, num, tr } from '../lib/i18n';
 
 export interface Story {
   id: string;
@@ -29,12 +29,32 @@ export const CROWD_LABELS: Record<CrowdLevel, { bn: string; en: string; emoji: s
   3: { bn: 'ঠাসা ভিড়', en: 'Packed', emoji: '🥵' },
 };
 
+// The Worker answers in Bengali; English visitors get these, by error code.
+const EN_ERRORS: Record<string, string> = {
+  bad_body: 'Something went wrong — please try again.',
+  bad_form: 'Something went wrong — please try again.',
+  bad_level: 'Pick how crowded it is.',
+  bad_map: 'Paste the Google Maps "Share" link (or leave it empty).',
+  bad_pandal: 'Pick which puja this is.',
+  bad_size: "This photo's size doesn't work. Try another photo.",
+  no_area: 'Write where the puja is (para / area).',
+  no_consent: 'Tick the consent box first.',
+  no_name: 'Write the name of the puja.',
+  no_photo: 'Choose a photo.',
+  not_jpeg: "This photo can't be opened. Try another one.",
+  quota: "Today's limit is reached! Send photos again tomorrow.",
+  server: 'Server trouble — please try again in a bit.',
+  slow_down: "You've sent a lot of photos — try again in a little while.",
+  too_large: 'This photo is too big. Try another one.',
+  network: 'Network problem — please try again.',
+};
+
 export class ApiError extends Error {
   constructor(
     public code: string,
     message: string,
   ) {
-    super(message);
+    super(isEn() ? (EN_ERRORS[code] ?? 'Something went wrong — please try again.') : message);
   }
 }
 
@@ -118,11 +138,11 @@ export function uploadStory(form: FormData, onProgress: (fraction: number) => vo
   });
 }
 
-/** "৫ মিনিট আগে" */
+/** "৫ মিনিট আগে" / "5 min ago" */
 export function timeAgo(ms: number, now = Date.now()): string {
   const min = Math.max(0, Math.round((now - ms) / 60000));
-  if (min < 1) return 'এইমাত্র';
-  if (min < 60) return `${toBnDigits(min)} মিনিট আগে`;
+  if (min < 1) return tr('এইমাত্র', 'just now');
+  if (min < 60) return tr(`${num(min)} মিনিট আগে`, `${min} min ago`);
   const hr = Math.round(min / 60);
-  return `${toBnDigits(hr)} ঘণ্টা আগে`;
+  return tr(`${num(hr)} ঘণ্টা আগে`, `${hr} hr ago`);
 }

@@ -20,6 +20,7 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
     <div data-panel hidden>
       <div class="adm__bar">
         <span data-you></span>
+        <span class="adm__stats" data-stats-admin></span>
         <button class="adm__link" type="button" data-refresh>↻ রিফ্রেশ</button>
         <button class="adm__link" type="button" data-logout>বেরোন</button>
       </div>
@@ -31,10 +32,12 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
         <button role="tab" data-tab="pending">স্টোরি <b data-count="pending">০</b></button>
         <button role="tab" data-tab="pujas">নতুন পুজো <b data-count="pujas">০</b></button>
         <button role="tab" data-tab="live">লাইভ <b data-count="live">০</b></button>
+        <button role="tab" data-tab="archive">পুরনো <b data-count="archive">০</b></button>
       </nav>
 
       <p class="adm__hint" data-hint></p>
       <ul class="adm__list" data-list></ul>
+      <button class="btn adm__more" type="button" data-more hidden>আরও পুরনো দেখুন</button>
     </div>
   </section>
 </Layout>
@@ -59,6 +62,7 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
     reports: number;
     createdAt: number;
     reviewedBy: string | null;
+    expiresAt: number | null;
   }
   interface Puja {
     kind: 'pujas';
@@ -75,7 +79,7 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
     reviewedBy: string | null;
   }
   type Item = Story | Puja;
-  type Tab = 'hidden' | 'pending' | 'pujas' | 'live';
+  type Tab = 'hidden' | 'pending' | 'pujas' | 'live' | 'archive';
 
   const KEY = 'parar-pujo:admin-key';
   const names = (window as unknown as { __PANDAL_NAMES__: Record<string, string> }).__PANDAL_NAMES__;
@@ -86,6 +90,12 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
   const tgBox = $('[data-tg]');
   let items: Item[] = [];
   let tab: Tab = 'pending';
+  // Approved stories past their 24h: off the site, kept here. Loaded a page at a time.
+  let archive: Story[] = [];
+  let archived = 0;
+  let archiveMore = true;
+  const more = $<HTMLButtonElement>('[data-more]');
+  const fullDate = new Intl.DateTimeFormat('bn-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
 
   const store = {
     get: (k: string, s: Storage = localStorage) => {
@@ -130,15 +140,39 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
   }
 
   const inTab = (i: Item, t: Tab) => (t === 'pujas' ? i.kind === 'pujas' : i.kind === 'stories' && i.status === t);
+  const isArchived = (i: Item) => archive.includes(i as Story);
+
+  async function loadArchive() {
+    more.disabled = true;
+    try {
+      const before = archive.length ? archive[archive.length - 1].expiresAt : '';
+      const data = await api<{ stories: Omit<Story, 'kind'>[]; more: boolean }>(`/api/admin/archive?before=${before ?? ''}`);
+      archive.push(...data.stories.map((s) => ({ ...s, kind: 'stories' as const })));
+      archiveMore = data.more;
+      render();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      more.disabled = false;
+    }
+  }
 
   async function load() {
-    const data = await api<{ you: string; telegram: { tokenSet: boolean; connected: boolean }; stories: Omit<Story, 'kind'>[]; pujas: Omit<Puja, 'kind'>[] }>(
+    const data = await api<{ you: string; telegram: { tokenSet: boolean; connected: boolean }; archived: number; stats: { visits: number; shownVisits: number; posters: number }; stories: Omit<Story, 'kind'>[]; pujas: Omit<Puja, 'kind'>[] }>(
       '/api/admin/queue',
     );
+    // New ones expired since the archive was opened: reload it from the top next time
+    if (data.archived !== archived && archive.length) {
+      archive = [];
+      archiveMore = true;
+      if (tab === 'archive') void loadArchive();
+    }
+    archived = data.archived;
     items = [...data.stories.map((s) => ({ ...s, kind: 'stories' as const })), ...data.pujas.map((p) => ({ ...p, kind: 'pujas' as const }))];
     login.hidden = true;
     panel.hidden = false;
     $('[data-you]').textContent = `নমস্কার, ${data.you}`;
+    $('[data-stats-admin]').textContent = `👀 আসল ${toBnDigits(data.stats.visits.toLocaleString('en-IN'))} ভিজিট (সাইটে ${toBnDigits(data.stats.shownVisits.toLocaleString('en-IN'))}) · 🎨 ${toBnDigits(data.stats.posters.toLocaleString('en-IN'))} পোস্টার`;
     renderTelegram(data.telegram);
     render();
   }
@@ -214,8 +248,8 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
 
   // ---------- queue ----------
   function render() {
-    for (const t of ['hidden', 'pending', 'pujas', 'live'] as const) {
-      const n = items.filter((i) => inTab(i, t) && !(t === 'pujas' && i.status === 'live')).length;
+    for (const t of ['hidden', 'pending', 'pujas', 'live', 'archive'] as const) {
+      const n = t === 'archive' ? archived : items.filter((i) => inTab(i, t) && !(t === 'pujas' && i.status === 'live')).length;
       $(`[data-count="${t}"]`).textContent = toBnDigits(n);
       $(`[data-tab="${t}"]`).setAttribute('aria-selected', String(t === tab));
     }
@@ -224,9 +258,11 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
       pending: 'সেলফি, বন্ধুদের ছবি, ঠাকুর — সব চলবে, ✓ দিলে ২৪ ঘণ্টা সবাই দেখবে। কাউকে লুকিয়ে তোলা, আপত্তিকর বা রাজনৈতিক কিছু হলে ✕।',
       pujas: 'নতুন পুজো আগে, তারপর যেগুলো সাইটে আছে। ✓ দিলে হোম পেজে "আরও পাড়ার পুজো"-তে দেখা যাবে।',
       live: 'এখন সবাই দেখছে। কোনোটা সরাতে চাইলে ✕।',
+      archive: '২৪ ঘণ্টা পেরিয়ে সাইট থেকে সরে গেছে, কিন্তু ছবি রাখা আছে — নতুনগুলো আগে। ছবিতে চাপলে পুরো ছবি খুলবে।',
     }[tab];
 
-    const shown = items.filter((i) => inTab(i, tab));
+    const shown: Item[] = tab === 'archive' ? archive : items.filter((i) => inTab(i, tab));
+    more.hidden = tab !== 'archive' || !archiveMore || !archive.length;
     list.replaceChildren(...shown.map(row));
     if (!shown.length) {
       const empty = document.createElement('li');
@@ -252,7 +288,7 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
 
     if (item.kind === 'stories') {
       title.textContent = names[item.pandal] ?? item.pandalName ?? item.pandal;
-      meta.textContent = [timeAgo(item.createdAt), item.author, item.reports ? `রিপোর্ট ${toBnDigits(item.reports)}` : null, item.reviewedBy && `✓ ${item.reviewedBy}`]
+      meta.textContent = [isArchived(item) ? fullDate.format(item.createdAt) : timeAgo(item.createdAt), item.author, item.reports ? `রিপোর্ট ${toBnDigits(item.reports)}` : null, item.reviewedBy && `✓ ${item.reviewedBy}`]
         .filter(Boolean)
         .join(' · ');
       body.textContent = item.caption ?? '';
@@ -274,6 +310,21 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
     const actions = document.createElement('div');
     actions.className = 'item__actions';
     const live = item.status === 'live';
+    if (isArchived(item)) {
+      const full = document.createElement('a');
+      full.href = item.url;
+      full.target = '_blank';
+      full.rel = 'noopener';
+      full.append(img);
+      const save = document.createElement('a');
+      save.className = 'btn btn--yellow';
+      save.href = item.url;
+      save.download = `parar-pujo-${item.id.slice(0, 8)}.jpg`;
+      save.textContent = '↓ সেভ';
+      actions.append(save, button('✕ চিরতরে মুছুন', 'reject', item));
+      li.append(full, info, actions);
+      return li;
+    }
     if (!live) actions.append(button(item.kind === 'pujas' ? '✓ সাইটে দিন' : '✓ অনুমোদন', 'approve', item));
     actions.append(button(live ? '✕ সরিয়ে দিন' : '✕ বাতিল', 'reject', item));
     li.append(img, info, actions);
@@ -286,7 +337,9 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
     b.className = `btn ${action === 'approve' ? 'btn--yellow' : ''}`;
     b.textContent = text;
     b.addEventListener('click', async () => {
-      if (action === 'reject' && item.status === 'live' && !confirm('এটা সরিয়ে দেবেন?')) return;
+      const old = isArchived(item);
+      if (action === 'reject' && old && !confirm('ছবিটা চিরতরে মুছে যাবে, আর ফেরানো যাবে না। মুছবেন?')) return;
+      if (action === 'reject' && !old && item.status === 'live' && !confirm('এটা সরিয়ে দেবেন? ছবিটাও মুছে যাবে।')) return;
       b.disabled = true;
       try {
         await api(`/api/admin/${item.kind}/${item.id}`, {
@@ -295,7 +348,10 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
           body: JSON.stringify({ action }),
         });
         if (action === 'approve') item.status = 'live';
-        else items = items.filter((i) => i !== item);
+        else if (old) {
+          archive = archive.filter((i) => i !== item);
+          archived = Math.max(0, archived - 1);
+        } else items = items.filter((i) => i !== item);
         render();
       } catch (err) {
         alert((err as Error).message);
@@ -315,8 +371,10 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
     b.addEventListener('click', () => {
       tab = b.dataset.tab as Tab;
       render();
+      if (tab === 'archive' && !archive.length && archived) void loadArchive();
     }),
   );
+  more.addEventListener('click', () => void loadArchive());
   $('[data-refresh]').addEventListener('click', () => void load().catch(() => {}));
   $('[data-logout]').addEventListener('click', () => showLogin());
 
@@ -366,6 +424,12 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
 
   .adm__bar span {
     flex: 1;
+  }
+
+  .adm__bar .adm__stats {
+    flex: none;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
   }
 
   .adm__link {
@@ -425,13 +489,14 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
 
   .adm__tabs button {
     flex: 1;
-    padding: 10px 4px;
+    min-width: 0;
+    padding: 10px 2px;
     border: 2px solid var(--ink);
     border-bottom: 0;
     border-radius: 10px 10px 0 0;
     background: var(--paper-deep);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
   }
 
   .adm__tabs button[aria-selected='true'] {
@@ -515,6 +580,15 @@ const names = Object.fromEntries(pandals.map((p) => [p.slug, p.nameBn]));
   .adm__list :global(.item__actions .btn) {
     padding: 0.45em 0.9em;
     font-size: 0.95rem;
+  }
+
+  .adm__list :global(.item > a) {
+    grid-row: span 2;
+  }
+
+  .adm__more {
+    display: block;
+    margin: 18px auto 0;
   }
 
   .adm__list :global(.adm__empty) {

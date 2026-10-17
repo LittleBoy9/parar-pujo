@@ -2,80 +2,82 @@
 import Layout from '../layouts/Layout.astro';
 import { pandals } from '../data/pandals';
 import { palettes } from '../data/palettes';
-import { site, tithis } from '../data/site';
+import { creator, site, tithis } from '../data/site';
 
-const storyPandals = pandals.map((p) => ({ slug: p.slug, nameBn: p.nameBn, areaBn: p.areaBn, palette: palettes[p.palette] }));
+const storyPandals = pandals.map((p) => ({ slug: p.slug, nameBn: p.nameBn, nameEn: p.nameEn, areaBn: p.areaBn, palette: palettes[p.palette] }));
 const frames = [
-  { id: '', bn: 'ফ্রেম ছাড়া' },
-  { id: 'chalchitra', bn: 'চালচিত্র' },
-  { id: 'album', bn: 'অ্যালবাম' },
-  { id: 'alpona', bn: 'আলপনা' },
-  { id: 'marquee', bn: 'সিনেমা বোর্ড' },
+  { id: '', bn: 'ফ্রেম ছাড়া', en: 'No frame' },
+  { id: 'chalchitra', bn: 'চালচিত্র', en: 'Chalchitra' },
+  { id: 'album', bn: 'অ্যালবাম', en: 'Album' },
+  { id: 'alpona', bn: 'আলপনা', en: 'Alpona' },
+  { id: 'marquee', bn: 'সিনেমা বোর্ড', en: 'Cinema board' },
 ];
+const deleteRuleEn = `After 24 hours your photo leaves the site, but we keep a copy. Want it deleted for good? Message <a href="${creator.instagramUrl}" target="_blank" rel="noopener">@${creator.instagram}</a> on Instagram.`;
 ---
 
 <Layout
   title="স্টোরিতে ছবি দিন"
+  titleEn="Share a story"
   description="প্যান্ডেলের সামনে সেলফি, বন্ধুদের সাথে আড্ডা, ঠাকুর — পাড়ার স্টোরিতে দিন, ২৪ ঘণ্টা সবাই দেখবে। Share your Durga Puja selfie as a Parar Pujo story."
   og="story"
   ogAlt="পাড়ার স্টোরিতে ছবি দিন — পাড়ার পুজো"
 >
   <section class="up wrap">
-    <h1 class="section-title">পাড়ার স্টোরিতে ছবি দিন</h1>
-    <p class="section-sub">
+    <h1 class="section-title" data-en="Share a photo to the para story">পাড়ার স্টোরিতে ছবি দিন</h1>
+    <p class="section-sub" data-en="A selfie at the pandal, adda with friends, Thakur, bhog, dhunuchi dance — anything goes!">
       প্যান্ডেলের সামনে সেলফি, বন্ধুদের সাথে আড্ডা, ঠাকুর, ভোগ, ধুনুচি নাচ — যা খুশি!
       <span class="en">· selfies, friends, the protima — anything from today</span>
     </p>
 
     <form class="up__form" data-up-form novalidate>
       <fieldset>
-        <legend>১. কোন ঠাকুরের ওখানে?</legend>
+        <legend data-en="1. Which puja are you at?">১. কোন ঠাকুরের ওখানে?</legend>
         <div class="chips" data-puja-chips>
           {
             storyPandals.map((p) => (
               <label class="chip" style={`--c:${p.palette.bg}`}>
                 <input type="radio" name="pandal" value={p.slug} required />
-                <span>{p.nameBn}</span>
+                <span data-en={p.nameEn}>{p.nameBn}</span>
               </label>
             ))
           }
           <label class="chip chip--other" data-other-chip>
             <input type="radio" name="pandal" value="other" />
-            <span>✏️ অন্য পুজো</span>
+            <span data-en="✏️ Another puja">✏️ অন্য পুজো</span>
           </label>
         </div>
         <div class="other" data-other hidden>
-          <input type="text" name="pujaName" maxlength="40" placeholder="পুজোর নাম — যেমন: নবীন সংঘ সার্বজনীন" />
-          <input type="text" name="pujaArea" maxlength="40" placeholder="কোথায় — পাড়া / এলাকা, যেমন: বেহালা" />
+          <input type="text" name="pujaName" maxlength="40" placeholder="পুজোর নাম — যেমন: নবীন সংঘ সার্বজনীন" data-en-placeholder="Puja name — e.g. Nabin Sangha Sarbojanin" />
+          <input type="text" name="pujaArea" maxlength="40" placeholder="কোথায় — পাড়া / এলাকা, যেমন: বেহালা" data-en-placeholder="Where — para / area, e.g. Behala" />
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>২. ছবি</legend>
+        <legend data-en="2. Photo">২. ছবি</legend>
         <div class="sources">
           <label class="source source--selfie">
             <input type="file" accept="image/*" capture="user" data-photo-input />
-            <span>🤳 সেলফি তুলুন</span>
+            <span data-en="🤳 Take a selfie">🤳 সেলফি তুলুন</span>
           </label>
           <label class="source">
             <input type="file" accept="image/*" data-photo-input />
-            <span>🖼️ গ্যালারি থেকে</span>
+            <span data-en="🖼️ From gallery">🖼️ গ্যালারি থেকে</span>
           </label>
         </div>
 
         <div class="stage" data-stage hidden>
-          <img class="stage__img" data-preview alt="আপনার ছবি" />
-          <canvas class="stage__canvas" data-framed hidden aria-label="ফ্রেম সহ ছবি"></canvas>
+          <img class="stage__img" data-preview alt="আপনার ছবি" data-en-alt="Your photo" />
+          <canvas class="stage__canvas" data-framed hidden aria-label="ফ্রেম সহ ছবি" data-en-aria-label="Your photo with the frame"></canvas>
         </div>
 
         <div class="frames" data-frames hidden>
-          <span class="frames__label">পুজোর ফ্রেম লাগাবেন?</span>
+          <span class="frames__label" data-en="Add a puja frame?">পুজোর ফ্রেম লাগাবেন?</span>
           <div class="chips">
             {
               frames.map((f, i) => (
                 <label class="chip chip--small">
                   <input type="radio" name="frame" value={f.id} checked={i === 0} />
-                  <span>{f.bn}</span>
+                  <span data-en={f.en}>{f.bn}</span>
                 </label>
               ))
             }
@@ -84,37 +86,37 @@ const frames = [
       </fieldset>
 
       <fieldset>
-        <legend>৩. দু'কথা <span class="en">(optional)</span></legend>
-        <input type="text" name="caption" maxlength="80" placeholder="যেমন: বন্ধুদের সাথে সপ্তমীর সন্ধে!" />
-        <input type="text" name="author" maxlength="30" placeholder="আপনার নাম (ইচ্ছে হলে)" />
+        <legend data-en="3. Say something (optional)">৩. দু'কথা <span class="en">(optional)</span></legend>
+        <input type="text" name="caption" maxlength="80" placeholder="যেমন: বন্ধুদের সাথে সপ্তমীর সন্ধে!" data-en-placeholder="e.g. Saptami evening with friends!" />
+        <input type="text" name="author" maxlength="30" placeholder="আপনার নাম (ইচ্ছে হলে)" data-en-placeholder="Your name (optional)" />
       </fieldset>
 
       <label class="consent">
         <input type="checkbox" name="consent" value="yes" required />
-        <span>ছবিটা আমার তোলা। ছবিতে যাঁদের দেখা যাচ্ছে, তাঁদের আপত্তি নেই।</span>
+        <span data-en="I took this photo, and everyone in it is okay with it being shared.">ছবিটা আমার তোলা। ছবিতে যাঁদের দেখা যাচ্ছে, তাঁদের আপত্তি নেই।</span>
       </label>
 
       <ul class="rules">
-        <li>অনুমোদন পেলে তবেই ছবি সবাই দেখতে পাবে।</li>
-        <li>২৪ ঘণ্টা পর ছবি নিজে থেকেই মুছে যাবে।</li>
-        <li>ছবির লোকেশন (GPS) তথ্য মুছে দেওয়া হয়।</li>
+        <li data-en="Your photo goes live for everyone only after it's approved.">অনুমোদন পেলে তবেই ছবি সবাই দেখতে পাবে।</li>
+        <li data-en={deleteRuleEn}>২৪ ঘণ্টা পর ছবি সাইট থেকে সরে যাবে, তবে আমাদের কাছে রাখা থাকবে। পুরোপুরি মুছতে চাইলে ইনস্টাগ্রামে <a href={creator.instagramUrl} target="_blank" rel="noopener">@{creator.instagram}</a>-কে জানান।</li>
+        <li data-en="Location (GPS) data is removed from your photo.">ছবির লোকেশন (GPS) তথ্য মুছে দেওয়া হয়।</li>
       </ul>
 
       <p class="up__error" data-up-error role="alert" hidden></p>
 
       <button class="btn btn--red up__go" type="submit" data-up-go>
-        <span data-up-label>পাঠিয়ে দিন</span>
+        <span data-up-label data-en="Send it">পাঠিয়ে দিন</span>
         <span class="up__bar" aria-hidden="true"><i data-up-bar></i></span>
       </button>
     </form>
 
     <div class="done" data-up-done hidden>
-      <p class="done__big">পাঠানো হয়েছে! 🙏</p>
-      <p>অনুমোদন পেলেই পাড়ার স্টোরিতে দেখা যাবে — সাধারণত কিছুক্ষণের মধ্যে।</p>
+      <p class="done__big" data-en="Sent! 🙏">পাঠানো হয়েছে! 🙏</p>
+      <p data-en="It'll show up in the para story once approved — usually within a little while.">অনুমোদন পেলেই পাড়ার স্টোরিতে দেখা যাবে — সাধারণত কিছুক্ষণের মধ্যে।</p>
       <p class="en">Sent! It'll show up once it's approved.</p>
       <div class="done__actions">
-        <button class="btn btn--yellow" type="button" data-up-again>আরেকটা ছবি দিন</button>
-        <a class="btn" href="/">স্টোরি দেখুন</a>
+        <button class="btn btn--yellow" type="button" data-up-again data-en="Share another photo">আরেকটা ছবি দিন</button>
+        <a class="btn" href="/" data-en="See the stories">স্টোরি দেখুন</a>
       </div>
     </div>
   </section>
@@ -130,6 +132,7 @@ const frames = [
   import { FORMATS, loadFonts, loadImage, photoInput, type CardPalette } from '../scripts/card/kit';
   import { TEMPLATES, drawCard } from '../scripts/card/templates';
   import { pujaToday } from '../scripts/card/greeting';
+  import { isEn, tr } from '../lib/i18n';
 
   const { storyPandals, tithis, yearBn } = (window as unknown as {
     __STORY__: { storyPandals: { slug: string; nameBn: string; areaBn: string; palette: CardPalette }[]; tithis: { key: string; dates: string[] }[]; yearBn: string };
@@ -164,7 +167,7 @@ const frames = [
       input.name = 'pandal';
       input.value = p.id;
       const span = document.createElement('span');
-      span.textContent = `${p.nameBn} · ${p.areaBn}`;
+      span.textContent = `${(isEn() && p.nameEn) || p.nameBn} · ${p.areaBn}`;
       label.append(input, span);
       box.insertBefore(label, $('[data-other-chip]')); // "অন্য পুজো" stays last
     });
@@ -226,7 +229,7 @@ const frames = [
       } catch {
         photo = null;
         photoImg = null;
-        showError('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।');
+        showError(tr('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।', "This photo won't open — try another one."));
       }
     }),
   );
@@ -247,23 +250,23 @@ const frames = [
       const blob = await new Promise<Blob | null>((r) => framed.toBlob(r, 'image/jpeg', q));
       if (blob && blob.size <= 850 * 1024) return blob;
     }
-    throw new Error('ছবিটা খুব বড় হয়ে যাচ্ছে — ফ্রেম ছাড়া দিন।');
+    throw new Error(tr('ছবিটা খুব বড় হয়ে যাচ্ছে — ফ্রেম ছাড়া দিন।', 'The photo is getting too big — send it without a frame.'));
   }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorBox.hidden = true;
     const fd = new FormData(form);
-    if (!fd.get('pandal')) return showError('কোন ঠাকুরের ওখানে, সেটা বাছুন।');
+    if (!fd.get('pandal')) return showError(tr('কোন ঠাকুরের ওখানে, সেটা বাছুন।', "Pick which puja you're at."));
     if (fd.get('pandal') === 'other') {
-      if (!String(fd.get('pujaName') || '').trim()) return showError('পুজোর নামটা লিখুন।');
-      if (!String(fd.get('pujaArea') || '').trim()) return showError('পুজোটা কোথায়, লিখুন।');
+      if (!String(fd.get('pujaName') || '').trim()) return showError(tr('পুজোর নামটা লিখুন।', 'Write the name of the puja.'));
+      if (!String(fd.get('pujaArea') || '').trim()) return showError(tr('পুজোটা কোথায়, লিখুন।', 'Write where the puja is.'));
     }
-    if (!photo) return showError('একটা ছবি বা সেলফি দিন।');
-    if (fd.get('consent') !== 'yes') return showError('সম্মতিতে টিক দিন।');
+    if (!photo) return showError(tr('একটা ছবি বা সেলফি দিন।', 'Add a photo or a selfie.'));
+    if (fd.get('consent') !== 'yes') return showError(tr('সম্মতিতে টিক দিন।', 'Tick the consent box first.'));
 
     go.disabled = true;
-    label.textContent = 'পাঠানো হচ্ছে…';
+    label.textContent = tr('পাঠানো হচ্ছে…', 'Sending…');
     try {
       await renderFrame();
       const blob = frameId() ? await framedBlob() : photo.blob;
@@ -283,7 +286,7 @@ const frames = [
       showError((err as Error).message);
     } finally {
       go.disabled = false;
-      label.textContent = 'পাঠিয়ে দিন';
+      label.textContent = tr('পাঠিয়ে দিন', 'Send it');
       bar.style.width = '0';
     }
   });

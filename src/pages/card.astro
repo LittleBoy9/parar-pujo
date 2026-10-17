@@ -9,6 +9,7 @@ import { site, tithis } from '../data/site';
 const pujas = pandals.map((p) => ({
   slug: p.slug,
   nameBn: p.nameBn,
+  nameEn: p.nameEn,
   areaBn: p.areaBn,
   photo: p.photos[0] ?? null,
   focus: p.focus ? (p.focus.split(' ').map((v) => parseFloat(v) / 100) as [number, number]) : null,
@@ -16,56 +17,73 @@ const pujas = pandals.map((p) => ({
 }));
 
 const paletteNames = Object.keys(palettes) as PaletteName[];
-const greetings = ['শুভ শারদীয়া', 'শুভ মহালয়া', 'শুভ ষষ্ঠী', 'শুভ সপ্তমী', 'শুভ মহাষ্টমী', 'শুভ মহানবমী', 'শুভ বিজয়া'];
-const lines = ['', 'এবারের পুজো এখানেই কাটল', 'ঠাকুর দেখা চলছে…', 'অঞ্জলি দিয়ে এলাম 🙏', 'পাড়ার পুজোই সেরা পুজো', 'আসছে বছর আবার হবে'];
+// shown with an English gloss in English mode; the poster itself prints the Bengali
+const greetings = [
+  ['শুভ শারদীয়া', 'Happy Sharadiya'],
+  ['শুভ মহালয়া', 'Happy Mahalaya'],
+  ['শুভ ষষ্ঠী', 'Happy Shashthi'],
+  ['শুভ সপ্তমী', 'Happy Saptami'],
+  ['শুভ মহাষ্টমী', 'Happy Maha Ashtami'],
+  ['শুভ মহানবমী', 'Happy Maha Navami'],
+  ['শুভ বিজয়া', 'Shubho Bijoya'],
+];
+const lines = [
+  ['', ''],
+  ['এবারের পুজো এখানেই কাটল', "Spent this year's puja right here"],
+  ['ঠাকুর দেখা চলছে…', 'Out pandal-hopping…'],
+  ['অঞ্জলি দিয়ে এলাম 🙏', 'Just gave anjali'],
+  ['পাড়ার পুজোই সেরা পুজো', "Our para's puja is the best"],
+  ['আসছে বছর আবার হবে', 'See you next year, Maa'],
+];
 
 // one-tap phrases, each with a look of its own
 const phrases = [
-  { text: 'জয় মা দুর্গা', font: 'galada', color: '#f2b632', effect: 'outline' },
-  { text: 'ঢাকের তালে কোমর দোলে', font: 'baloo', color: '#ffd36b', effect: 'outline' },
-  { text: 'আসছে বছর আবার হবে', font: 'atma', color: '#fffaf0', effect: 'shadow' },
-  { text: 'পুজো মানেই প্রেম ❤️', font: 'galada', color: '#ff8fa3', effect: 'outline' },
-  { text: 'অষ্টমীর অঞ্জলি 🙏', font: 'tiro', color: '#2b1a10', effect: 'pill' },
-  { text: 'বন্ধুদের সাথে পুজো', font: 'mina', color: '#fffaf0', effect: 'shadow' },
-  { text: 'ঠাকুর দেখা চলছে…', font: 'anek', color: '#b3261e', effect: 'pill' },
-  { text: 'প্যান্ডেল হপিং 🚶', font: 'hind', color: '#fffaf0', effect: 'pill' },
-  { text: 'শুভ শারদীয়া', font: 'noto', color: '#f2b632', effect: 'outline' },
+  { text: 'জয় মা দুর্গা', en: 'Jai Maa Durga', font: 'galada', color: '#f2b632', effect: 'outline' },
+  { text: 'ঢাকের তালে কোমর দোলে', en: 'Dancing to the dhak', font: 'baloo', color: '#ffd36b', effect: 'outline' },
+  { text: 'আসছে বছর আবার হবে', en: 'See you next year, Maa', font: 'atma', color: '#fffaf0', effect: 'shadow' },
+  { text: 'পুজো মানেই প্রেম ❤️', en: 'Puja means love', font: 'galada', color: '#ff8fa3', effect: 'outline' },
+  { text: 'অষ্টমীর অঞ্জলি 🙏', en: 'Ashtami anjali', font: 'tiro', color: '#2b1a10', effect: 'pill' },
+  { text: 'বন্ধুদের সাথে পুজো', en: 'Puja with friends', font: 'mina', color: '#fffaf0', effect: 'shadow' },
+  { text: 'ঠাকুর দেখা চলছে…', en: 'Out pandal-hopping…', font: 'anek', color: '#b3261e', effect: 'pill' },
+  { text: 'প্যান্ডেল হপিং 🚶', en: 'Pandal hopping', font: 'hind', color: '#fffaf0', effect: 'pill' },
+  { text: 'শুভ শারদীয়া', en: 'Happy Sharadiya', font: 'noto', color: '#f2b632', effect: 'outline' },
 ];
 
 const colors = [
-  ['#fffaf0', 'সাদা'],
-  ['#1b120c', 'কালো'],
-  ['#b3261e', 'সিঁদুর'],
-  ['#f2b632', 'হলুদ'],
-  ['#e8731c', 'কমলা'],
-  ['#ff8fa3', 'গোলাপি'],
-  ['#7a1712', 'খয়েরি'],
-  ['#2b3a8a', 'নীল'],
-  ['#2c6e7a', 'গঙ্গা'],
-  ['#3f8f4f', 'সবুজ'],
+  ['#fffaf0', 'সাদা', 'White'],
+  ['#1b120c', 'কালো', 'Black'],
+  ['#b3261e', 'সিঁদুর', 'Sindoor red'],
+  ['#f2b632', 'হলুদ', 'Yellow'],
+  ['#e8731c', 'কমলা', 'Orange'],
+  ['#ff8fa3', 'গোলাপি', 'Pink'],
+  ['#7a1712', 'খয়েরি', 'Maroon'],
+  ['#2b3a8a', 'নীল', 'Blue'],
+  ['#2c6e7a', 'গঙ্গা', 'Ganga teal'],
+  ['#3f8f4f', 'সবুজ', 'Green'],
 ];
 
 const tabs = [
-  ['design', 'ডিজাইন'],
-  ['photos', 'ছবি'],
-  ['text', 'লেখা'],
-  ['stickers', 'স্টিকার'],
-  ['puja', 'পুজো'],
-  ['color', 'রং'],
+  ['design', 'ডিজাইন', 'Design'],
+  ['photos', 'ছবি', 'Photos'],
+  ['text', 'লেখা', 'Text'],
+  ['stickers', 'স্টিকার', 'Stickers'],
+  ['puja', 'পুজো', 'Puja'],
+  ['color', 'রং', 'Colour'],
 ];
 ---
 
 <Layout
   title="পুজো পরিক্রমার পোস্টার"
+  titleEn="Pandal-hopping poster"
   description="সেলফি, প্যান্ডেলের ছবি, নিজের বাংলা লেখা, স্টিকার — ১৫টা ডিজাইনে নিজের দুর্গাপুজোর পোস্টার বানান, ইনস্টা স্টোরি বা হোয়াটসঅ্যাপ স্ট্যাটাসে দিন। Make your own Durga Puja poster."
   og="card"
   ogAlt="পুজো পরিক্রমার পোস্টার — নিজের পুজোর পোস্টার বানান"
 >
   <section class="poster">
     <header class="poster__head wrap">
-      <h1 class="section-title">পুজো পরিক্রমার পোস্টার</h1>
+      <h1 class="section-title" data-en="Pandal-hopping poster">পুজো পরিক্রমার পোস্টার</h1>
       <div class="poster__by"><CreatorChip /></div>
-      <p class="section-sub">
+      <p class="section-sub" data-en="Take a selfie, add the pandal, write your own words — your poster's ready!">
         সেলফি তুলুন, প্যান্ডেলের ছবি দিন, নিজের মতো লিখুন — পোস্টার তৈরি!
         <span class="en">· your photos, your words, your poster</span>
       </p>
@@ -74,16 +92,16 @@ const tabs = [
     <form class="studio wrap" data-form>
       <div class="studio__stage">
         <div class="studio__canvas">
-          <canvas data-preview aria-label="পোস্টারের প্রিভিউ — আঙুলে টেনে সাজান" width="1080" height="1920"></canvas>
-          <p class="studio__tip" data-tip>👆 টেনে সরান · দু'আঙুলে ছোট-বড়, ঘোরান · লেখায় চাপুন</p>
+          <canvas data-preview aria-label="পোস্টারের প্রিভিউ — আঙুলে টেনে সাজান" data-en-aria-label="Poster preview — drag with your finger to arrange" width="1080" height="1920"></canvas>
+          <p class="studio__tip" data-tip data-en="👆 Drag to move · pinch to resize or turn · tap text to edit">👆 টেনে সরান · দু'আঙুলে ছোট-বড়, ঘোরান · লেখায় চাপুন</p>
         </div>
       </div>
 
       <div class="studio__panel">
         <div class="tabs" role="tablist">
           {
-            tabs.map(([id, bn]) => (
-              <button type="button" role="tab" data-tab={id} aria-selected="false">
+            tabs.map(([id, bn, en]) => (
+              <button type="button" role="tab" data-tab={id} aria-selected="false" data-en={en}>
                 {bn}
               </button>
             ))
@@ -95,100 +113,100 @@ const tabs = [
           <div class="formats">
             {
               [
-                ['story', 'স্টোরি / স্ট্যাটাস', 'Insta story · WhatsApp status'],
-                ['post', 'পোস্ট / ছবি', 'Insta post · WhatsApp ছবি'],
-                ['square', 'চৌকো', 'গ্যালারি · ডিপি'],
-              ].map(([id, bn, en]) => (
+                ['story', 'স্টোরি / স্ট্যাটাস', 'Insta story · WhatsApp status', 'Story / Status', 'Insta story · WhatsApp status'],
+                ['post', 'পোস্ট / ছবি', 'Insta post · WhatsApp ছবি', 'Post / Photo', 'Insta post · WhatsApp photo'],
+                ['square', 'চৌকো', 'গ্যালারি · ডিপি', 'Square', 'Gallery · DP'],
+              ].map(([id, bn, en, titleEn, subEn]) => (
                 <label class="format">
                   <input type="radio" name="format" value={id} />
                   <span>
                     <i class={`format__shape format__shape--${id}`} />
-                    <b>{bn}</b>
-                    <small>{en}</small>
+                    <b data-en={titleEn}>{bn}</b>
+                    <small data-en={subEn}>{en}</small>
                   </span>
                 </label>
               ))
             }
           </div>
-          <div class="thumbs" data-thumbs role="radiogroup" aria-label="ডিজাইন"></div>
+          <div class="thumbs" data-thumbs role="radiogroup" aria-label="ডিজাইন" data-en-aria-label="Design"></div>
         </div>
 
         <!-- ছবি -->
         <div class="panel" data-panel="photos" hidden>
-          <p class="hint">সেলফি, প্যান্ডেল, ঠাকুর — যে ডিজাইনে যতগুলো ছবি লাগে। ছবি আপনার ফোনেই থাকে, কোথাও আপলোড হয় না।</p>
+          <p class="hint" data-en="Selfie, pandal, Thakur — as many photos as the design needs. Your photos stay on your phone; nothing is uploaded.">সেলফি, প্যান্ডেল, ঠাকুর — যে ডিজাইনে যতগুলো ছবি লাগে। ছবি আপনার ফোনেই থাকে, কোথাও আপলোড হয় না।</p>
           <div class="slots" data-slots></div>
         </div>
 
         <!-- লেখা -->
         <div class="panel" data-panel="text" hidden>
           <div class="editor editor--top" data-text-editor hidden>
-            <textarea data-t-text rows="2" maxlength="120" aria-label="লেখা"></textarea>
-            <span class="editor__label">লেখার ধরন</span>
+            <textarea data-t-text rows="2" maxlength="120" aria-label="লেখা" data-en-aria-label="Text"></textarea>
+            <span class="editor__label" data-en="Font">লেখার ধরন</span>
             <div class="fonts" data-fonts></div>
-            <span class="editor__label">রং</span>
+            <span class="editor__label" data-en="Colour">রং</span>
             <div class="colors">
-              {colors.map(([c, bn]) => <button type="button" class="color" data-color={c} style={`--c:${c}`} aria-label={bn} />)}
-              <label class="color color--custom" aria-label="নিজের রং">
+              {colors.map(([c, bn, en]) => <button type="button" class="color" data-color={c} style={`--c:${c}`} aria-label={bn} data-en-aria-label={en} />)}
+              <label class="color color--custom" aria-label="নিজের রং" data-en-aria-label="Pick your own colour">
                 <input type="color" data-t-custom-color />
               </label>
             </div>
-            <span class="editor__label" data-layer-only>সাজ</span>
+            <span class="editor__label" data-layer-only data-en="Style">সাজ</span>
             <div class="effects" data-layer-only>
               {
                 [
-                  ['none', 'সাধারণ'],
-                  ['outline', 'বর্ডার'],
-                  ['shadow', 'ছায়া'],
-                  ['pill', 'পেছনে রং'],
-                ].map(([v, bn]) => (
+                  ['none', 'সাধারণ', 'Plain'],
+                  ['outline', 'বর্ডার', 'Outline'],
+                  ['shadow', 'ছায়া', 'Shadow'],
+                  ['pill', 'পেছনে রং', 'Background'],
+                ].map(([v, bn, en]) => (
                   <label class="effect">
                     <input type="radio" name="effect" value={v} />
-                    <span>{bn}</span>
+                    <span data-en={en}>{bn}</span>
                   </label>
                 ))
               }
             </div>
-            <label class="range" data-layer-only>মাপ <input type="range" min="24" max="300" step="1" data-t-size /></label>
-            <label class="range" data-layer-only>ঘোরান <input type="range" min="-45" max="45" step="1" data-t-rot /></label>
+            <label class="range" data-layer-only><span data-en="Size">মাপ</span> <input type="range" min="24" max="300" step="1" data-t-size /></label>
+            <label class="range" data-layer-only><span data-en="Rotate">ঘোরান</span> <input type="range" min="-45" max="45" step="1" data-t-rot /></label>
             <div class="editor__actions" data-layer-only>
-              <button type="button" class="mini" data-layer-dup>⧉ কপি</button>
-              <button type="button" class="mini mini--danger" data-layer-delete>✕ মুছুন</button>
+              <button type="button" class="mini" data-layer-dup data-en="⧉ Copy">⧉ কপি</button>
+              <button type="button" class="mini mini--danger" data-layer-delete data-en="✕ Delete">✕ মুছুন</button>
             </div>
-            <label class="range" data-design-only hidden>মাপ <input type="range" min="30" max="300" step="1" data-d-scale /></label>
-            <label class="range" data-design-only hidden>ঘোরান <input type="range" min="-45" max="45" step="1" data-d-rot /></label>
-            <p class="editor__note" data-design-only hidden>প্রিভিউতে লেখাটা টেনে সরান, দু'আঙুলে ছোট-বড় করুন বা ঘোরান।</p>
+            <label class="range" data-design-only hidden><span data-en="Size">মাপ</span> <input type="range" min="30" max="300" step="1" data-d-scale /></label>
+            <label class="range" data-design-only hidden><span data-en="Rotate">ঘোরান</span> <input type="range" min="-45" max="45" step="1" data-d-rot /></label>
+            <p class="editor__note" data-design-only hidden data-en="Drag the text on the preview to move it; pinch with two fingers to resize or turn it.">প্রিভিউতে লেখাটা টেনে সরান, দু'আঙুলে ছোট-বড় করুন বা ঘোরান।</p>
             <div class="editor__actions" data-design-only hidden>
-              <button type="button" class="mini" data-design-hide>🙈 লুকান</button>
-              <button type="button" class="mini" data-design-reset>⟲ আগের মতো</button>
+              <button type="button" class="mini" data-design-hide data-en="🙈 Hide">🙈 লুকান</button>
+              <button type="button" class="mini" data-design-reset data-en="⟲ Reset">⟲ আগের মতো</button>
             </div>
           </div>
 
-          <span class="editor__label editor__label--first">এই ডিজাইনের লেখা <small>— চাপ দিয়ে বদলান</small></span>
+          <span class="editor__label editor__label--first" data-en="Text on this design <small>— tap to change</small>">এই ডিজাইনের লেখা <small>— চাপ দিয়ে বদলান</small></span>
           <div class="dtexts" data-design-texts></div>
-          <p class="hint">প্রিভিউতে যেকোনো লেখায় আঙুল ছোঁয়ালেও বদলাতে পারবেন।</p>
+          <p class="hint" data-en="You can also tap any text on the preview to change it.">প্রিভিউতে যেকোনো লেখায় আঙুল ছোঁয়ালেও বদলাতে পারবেন।</p>
 
-          <span class="editor__label">নিজের লেখা যোগ করুন</span>
+          <span class="editor__label" data-en="Add your own words">নিজের লেখা যোগ করুন</span>
           <div class="phrases">
             {
               phrases.map((p) => (
-                <button type="button" class="phrase" data-phrase={p.text} data-pfont={p.font} data-pcolor={p.color} data-peffect={p.effect}>
+                <button type="button" class="phrase" data-phrase={p.text} data-pfont={p.font} data-pcolor={p.color} data-peffect={p.effect} data-en={`+ ${p.text} <small>${p.en}</small>`}>
                   + {p.text}
                 </button>
               ))
             }
           </div>
-          <button type="button" class="btn btn--red add-text" data-add-text>✏️ নিজের লেখা যোগ করুন</button>
+          <button type="button" class="btn btn--red add-text" data-add-text data-en="✏️ Write your own">✏️ নিজের লেখা যোগ করুন</button>
 
         </div>
 
         <!-- স্টিকার -->
         <div class="panel" data-panel="stickers" hidden>
           <div class="editor editor--top" data-sticker-editor hidden>
-            <label class="range">মাপ <input type="range" min="60" max="700" step="1" data-s-size /></label>
-            <label class="range">ঘোরান <input type="range" min="-180" max="180" step="1" data-s-rot /></label>
+            <label class="range"><span data-en="Size">মাপ</span> <input type="range" min="60" max="700" step="1" data-s-size /></label>
+            <label class="range"><span data-en="Rotate">ঘোরান</span> <input type="range" min="-180" max="180" step="1" data-s-rot /></label>
             <div class="editor__actions">
-              <button type="button" class="mini" data-layer-dup>⧉ কপি</button>
-              <button type="button" class="mini mini--danger" data-layer-delete>✕ মুছুন</button>
+              <button type="button" class="mini" data-layer-dup data-en="⧉ Copy">⧉ কপি</button>
+              <button type="button" class="mini mini--danger" data-layer-delete data-en="✕ Delete">✕ মুছুন</button>
             </div>
           </div>
           <div class="stickers" data-sticker-grid></div>
@@ -196,42 +214,42 @@ const tabs = [
 
         <!-- পুজো -->
         <div class="panel" data-panel="puja" hidden>
-          <span class="editor__label">কোন পুজো?</span>
+          <span class="editor__label" data-en="Which puja?">কোন পুজো?</span>
           <div class="chips">
             <label class="chip chip--own">
               <input type="radio" name="source" value="custom" />
-              <span>✏️ আমার পাড়ার পুজো</span>
+              <span data-en="✏️ My para's puja">✏️ আমার পাড়ার পুজো</span>
             </label>
             {
               pujas.map((p) => (
                 <label class="chip">
                   <input type="radio" name="source" value={p.slug} />
-                  <span>{p.nameBn}</span>
+                  <span data-en={p.nameEn}>{p.nameBn}</span>
                 </label>
               ))
             }
           </div>
           <div class="own" data-own hidden>
-            <input type="text" name="pujaBn" maxlength="40" placeholder="পুজোর নাম — যেমন: নবীন সংঘ সার্বজনীন" />
-            <input type="text" name="areaBn" maxlength="30" placeholder="পাড়া / এলাকা — যেমন: বেহালা" />
+            <input type="text" name="pujaBn" maxlength="40" placeholder="পুজোর নাম — যেমন: নবীন সংঘ সার্বজনীন" data-en-placeholder="Puja name — e.g. Nabin Sangha Sarbojanin" />
+            <input type="text" name="areaBn" maxlength="30" placeholder="পাড়া / এলাকা — যেমন: বেহালা" data-en-placeholder="Para / area — e.g. Behala" />
           </div>
-          <span class="editor__label">শুভেচ্ছা আর লাইন</span>
-          <select name="greeting" aria-label="শুভেচ্ছা">
-            {greetings.map((g) => <option>{g}</option>)}
+          <span class="editor__label" data-en="Greeting and a line">শুভেচ্ছা আর লাইন</span>
+          <select name="greeting" aria-label="শুভেচ্ছা" data-en-aria-label="Greeting">
+            {greetings.map(([g, en]) => <option value={g} data-en={`${g} · ${en}`}>{g}</option>)}
           </select>
-          <select name="linePreset" aria-label="একটা লাইন">
-            {lines.map((l) => <option value={l}>{l || '— কোনো লাইন নয় —'}</option>)}
+          <select name="linePreset" aria-label="একটা লাইন" data-en-aria-label="A line">
+            {lines.map(([l, en]) => <option value={l} data-en={l ? `${l} · ${en}` : '— No line —'}>{l || '— কোনো লাইন নয় —'}</option>)}
           </select>
-          <input type="text" name="line" maxlength="70" placeholder="অথবা নিজের লাইন লিখুন…" />
+          <input type="text" name="line" maxlength="70" placeholder="অথবা নিজের লাইন লিখুন…" data-en-placeholder="Or write your own line…" />
           <div class="pair">
-            <input type="text" name="from" maxlength="30" placeholder="ইতি — আপনার নাম" />
-            <input type="text" name="to" maxlength="30" placeholder="প্রিয় — কাকে? (পোস্টকার্ডে)" />
+            <input type="text" name="from" maxlength="30" placeholder="ইতি — আপনার নাম" data-en-placeholder="From — your name" />
+            <input type="text" name="to" maxlength="30" placeholder="প্রিয় — কাকে? (পোস্টকার্ডে)" data-en-placeholder="To — who's it for? (postcard)" />
           </div>
         </div>
 
         <!-- রং -->
         <div class="panel" data-panel="color" hidden>
-          <span class="editor__label">ডিজাইনের রং</span>
+          <span class="editor__label" data-en="Design colours">ডিজাইনের রং</span>
           <div class="swatches">
             {
               paletteNames.map((name) => (
@@ -247,8 +265,8 @@ const tabs = [
     </form>
 
     <div class="actionbar">
-      <button class="btn btn--red" type="button" data-share>শেয়ার করুন</button>
-      <button class="btn" type="button" data-save>ফোনে সেভ</button>
+      <button class="btn btn--red" type="button" data-share data-en="Share">শেয়ার করুন</button>
+      <button class="btn" type="button" data-save data-en="Save to phone">ফোনে সেভ</button>
     </div>
   </section>
 
@@ -650,6 +668,13 @@ const tabs = [
     font-weight: 600;
   }
 
+  .phrase :global(small) {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.75;
+  }
+
   .add-text {
     width: 100%;
     justify-content: center;
@@ -966,6 +991,12 @@ const tabs = [
       min-width: 0;
       padding: 0.4em 0.2em;
       font-size: 0.9rem;
+    }
+
+    /* English labels run longer: let each tab take the room its word needs */
+    :global(html[lang='en']) .tabs button {
+      flex: 1 1 auto;
+      padding-inline: 0.1em;
     }
 
     .format span {

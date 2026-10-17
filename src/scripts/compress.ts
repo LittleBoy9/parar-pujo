@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n';
 import { decodePhoto } from './card/photos';
 
 // Shrinks a phone photo before upload: ~1440px on the long side, JPEG, usually 150–300 KB.
@@ -32,7 +33,7 @@ export async function compressPhoto(file: File): Promise<Compressed> {
     blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', quality));
     if (blob && blob.size <= MAX_BYTES) break;
   }
-  if (!blob || blob.size > MAX_BYTES) throw new Error('ছবিটা ছোট করা গেল না — অন্য ছবি দিন।');
+  if (!blob || blob.size > MAX_BYTES) throw new Error(tr('ছবিটা ছোট করা গেল না — অন্য ছবি দিন।', "Couldn't shrink this photo — try another one."));
 
   return { blob, width, height, previewUrl: URL.createObjectURL(blob) };
 }

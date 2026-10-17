@@ -9,7 +9,7 @@ interface Props {
 const { autostart = false } = Astro.props;
 ---
 
-<button class="dhak" type="button" aria-pressed="false" aria-label="ঢাক — চালু / বন্ধ" data-dhak data-autostart={autostart ? '1' : undefined}>
+<button class="dhak" type="button" aria-pressed="false" aria-label="ঢাক — চালু / বন্ধ" data-en-aria-label="Dhak — on / off" data-dhak data-autostart={autostart ? '1' : undefined}>
   <svg viewBox="0 0 64 64" aria-hidden="true" class="dhak__icon">
     <!-- kash-feather plume -->
     <g class="dhak__plume" fill="#fffaf0" stroke="#2b1a10" stroke-width="1.5">
@@ -23,7 +23,7 @@ const { autostart = false } = Astro.props;
     <path d="M16 27 L20 53 M26 24 L28 57 M38 24 L36 57 M48 27 L44 53" stroke="#2b1a10" stroke-width="1.2" opacity=".5" />
     <ellipse cx="9" cy="40" rx="4" ry="12" fill="#f1dcc0" stroke="#2b1a10" stroke-width="2" />
   </svg>
-  <span class="dhak__label">ঢাক</span>
+  <span class="dhak__label" data-en="Dhak">ঢাক</span>
 </button>
 
 <style>

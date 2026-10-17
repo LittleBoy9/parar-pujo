@@ -4,7 +4,7 @@
 ---
 
 <script>
-  import { toBnDigits } from '../lib/bangla';
+  import { num, tr } from '../lib/i18n';
 
   const SHOW_FROM = 50; // below this a number looks sad, so it simply isn't shown
   const DAY_KEY = 'parar-pujo:visit-day';
@@ -18,7 +18,15 @@
   }
 
   if (strip || counted !== today) {
-    fetch('/api/visit', { method: 'POST' })
+    // a random id per browser, so phones sharing one mobile-network IP each count once
+    let vid = '';
+    try {
+      vid = localStorage.getItem('parar-pujo:vid') ?? '';
+      if (!vid) localStorage.setItem('parar-pujo:vid', (vid = crypto.randomUUID()));
+    } catch {
+      // storage blocked — counted by connection only
+    }
+    fetch('/api/visit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ v: vid }) })
       .then((r) => (r.ok ? r.json() : null))
       .then((c: { visits: number; posters: number } | null) => {
         try {
@@ -27,10 +35,10 @@
           // fine
         }
         if (!strip || !c) return;
-        const fmt = (n: number) => toBnDigits(n.toLocaleString('en-IN'));
+        const fmt = (n: number) => num(n.toLocaleString('en-IN'));
         const parts: string[] = [];
-        if (c.visits >= SHOW_FROM) parts.push(`👀 ${fmt(c.visits)} বার দেখা হয়েছে`);
-        if (c.posters >= SHOW_FROM) parts.push(`🎨 ${fmt(c.posters)}টা পোস্টার বানানো হয়েছে`);
+        if (c.visits >= SHOW_FROM) parts.push(tr(`👀 ${fmt(c.visits)} বার দেখা হয়েছে`, `👀 ${fmt(c.visits)} visits`));
+        if (c.posters >= SHOW_FROM) parts.push(tr(`🎨 ${fmt(c.posters)}টা পোস্টার বানানো হয়েছে`, `🎨 ${fmt(c.posters)} posters made`));
         if (!parts.length) return;
         strip.textContent = parts.join('  ·  ');
         strip.hidden = false;

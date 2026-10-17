@@ -5,6 +5,8 @@ import SiteStats from '../components/SiteStats.astro';
 
 interface Props {
   title?: string;
+  /** the tab title for visitors who switched to English */
+  titleEn?: string;
   description?: string;
   /** which share image to use (a key in og-manifest.json, made by scripts/og.mjs) */
   og?: string;
@@ -16,6 +18,7 @@ interface Props {
 
 const {
   title,
+  titleEn,
   description = 'নিজের পুজোর পোস্টার বানান — সেলফি, প্যান্ডেলের ছবি, বাংলা লেখা, ১৫টা ডিজাইন। Make your own Durga Puja poster for stories, status and posts.',
   og = 'home',
   ogAlt = 'পাড়ার পুজো — নিজের পুজোর পোস্টার বানান',
@@ -28,6 +31,7 @@ const manifests = import.meta.glob<{ default: Record<string, string> }>('../data
 const ogManifest = Object.values(manifests)[0]?.default ?? {};
 const ogPath = ogManifest[og] ?? ogManifest.home;
 const fullTitle = title ? `${title} · ${site.titleBn}` : `${site.titleBn} · নিজের পুজোর পোস্টার বানান`;
+const fullTitleEn = titleEn ? `${titleEn} · ${site.titleEn}` : title ? `${site.titleEn} · ${site.titleBn}` : `${site.titleEn} · Make your own puja poster`;
 // clean URLs for share previews: /pandal/x, not /pandal/x.html
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/');
 const canonical = new URL(cleanPath, Astro.site);
@@ -48,14 +52,14 @@ const siteLd = {
     alternateName: creator.nameBn,
     url: creator.website,
     image: new URL(creator.photo, Astro.site).href,
-    sameAs: [creator.instagramUrl, creator.website],
+    sameAs: [creator.instagramUrl, creator.facebookUrl, creator.website],
   },
 };
 const path = Astro.url.pathname;
 const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean }[] = [
-  { href: '/#pujas', bn: 'পুজো', en: 'Pujas' },
+  { href: '/#pujas', bn: 'পুজো', en: 'Pujas', wide: true },
   { href: '/story', bn: 'স্টোরি', en: 'Stories' },
-  { href: '/card', bn: 'পোস্টার ✨', en: 'Make a poster', hot: true },
+  { href: '/card', bn: 'পোস্টার ✨', en: 'Poster ✨', hot: true },
 ];
 ---
 
@@ -64,7 +68,26 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{fullTitle}</title>
+    <title data-en={fullTitleEn}>{fullTitle}</title>
+    <!-- one address for everyone: the old workers.dev link and www hop to the main domain -->
+    <script is:inline define:vars={{ home: site.url }}>
+      // workers.dev waits until mobile ISPs' DNS has caught up with the new domain
+      if (/^www\./.test(location.hostname)) location.replace(home + location.pathname + location.search + location.hash);
+    </script>
+    <!-- English visitors: decide before anything paints (see src/lib/i18n.ts) -->
+    <script is:inline>
+      (function () {
+        try {
+          var q = new URLSearchParams(location.search).get('lang');
+          if (q === 'en' || q === 'bn') localStorage.setItem('parar-pujo:lang', q);
+          var l = q === 'en' || q === 'bn' ? q : localStorage.getItem('parar-pujo:lang');
+          if (l === 'en') {
+            document.documentElement.lang = 'en';
+            document.documentElement.setAttribute('data-lang', 'en');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#b3261e" />
     <meta name="author" content={`${creator.nameEn} (${creator.websiteLabel})`} />
@@ -106,21 +129,29 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
   <body>
     <header class="topbar">
       <div class="wrap topbar__inner">
-        <a href="/" class="topbar__logo" aria-label={site.titleEn}>{site.titleBn}</a>
+        <a href="/" class="topbar__logo" data-en={site.titleEn}>{site.titleBn}</a>
         <nav aria-label="Main">
           <ul>
             {
               nav.map((n) => (
                 <li class={n.wide ? 'nav__wide' : undefined}>
                   <a href={n.href} class={n.hot ? 'nav__hot' : undefined} aria-current={path === n.href ? 'page' : undefined}>
-                    {n.bn}
-                    <span class="visually-hidden"> ({n.en})</span>
+                    <span data-en={n.en}>{n.bn}</span>
+                    <span class="visually-hidden en"> ({n.en})</span>
                   </a>
                 </li>
               ))
             }
           </ul>
         </nav>
+        <label class="lang" title="ভাষা · Language">
+          <span class="lang__face" aria-hidden="true">অ/A</span>
+          <span class="visually-hidden">ভাষা · Language</span>
+          <select data-lang-select>
+            <option value="bn">বাংলা</option>
+            <option value="en">English</option>
+          </select>
+        </label>
       </div>
     </header>
 
@@ -134,23 +165,67 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
         <div class="footer__maker">
           <img src={creator.photoSm} alt={creator.nameEn} width="120" height="120" loading="lazy" />
           <div>
-            <p class="footer__made">বানিয়েছেন <a href="/#creator">{creator.nameBn}</a> · <span class="en">made by {creator.nameEn}</span></p>
+            <p class="footer__made" data-en={`Made by <a href="/#creator">${creator.nameEn}</a>`}>
+              বানিয়েছেন <a href="/#creator">{creator.nameBn}</a> · <span class="en">made by {creator.nameEn}</span>
+            </p>
             <p class="footer__links">
               <a href={creator.instagramUrl} target="_blank" rel="noopener">📸 @{creator.instagram}</a>
+              <a href={creator.facebookUrl} target="_blank" rel="noopener">👤 Facebook</a>
               <a href={creator.website} target="_blank" rel="noopener">🌐 {creator.websiteLabel}</a>
             </p>
           </div>
         </div>
-        <p class="footer__line">আসছে বছর আবার হবে</p>
+        <p class="footer__line" data-en="See you next year!">আসছে বছর আবার হবে</p>
         <p class="en">See you next year</p>
-        <p class="footer__small">পাড়ার লোকেদের ভালোবাসায় বানানো · made with love by the para</p>
+        <p class="footer__small" data-en="Made with love by the para">পাড়ার লোকেদের ভালোবাসায় বানানো · made with love by the para</p>
         <p class="footer__credit">
-          ঢাকের শব্দ: MythologyChallengerYT,{' '}
+          <span data-en="Dhak sound:">ঢাকের শব্দ:</span> MythologyChallengerYT,{' '}
           <a href="https://pixabay.com/sound-effects/musical-durga-puja-dhak-sound-9330/" target="_blank" rel="noopener">Pixabay</a>
         </p>
       </div>
     </footer>
     <SiteStats />
+
+    <!-- English: swap in the translations (runs before any module script attaches handlers) -->
+    <script is:inline>
+      (function () {
+        var doc = document.documentElement;
+        var select = document.querySelector('[data-lang-select]');
+        if (select) select.value = doc.lang === 'en' ? 'en' : 'bn';
+        if (doc.lang !== 'en') return;
+        var ATTRS = ['placeholder', 'aria-label', 'alt', 'title', 'content', 'value'];
+        function apply(root) {
+          root.querySelectorAll('[data-en]').forEach(function (el) {
+            el.innerHTML = el.getAttribute('data-en');
+          });
+          ATTRS.forEach(function (a) {
+            root.querySelectorAll('[data-en-' + a + ']').forEach(function (el) {
+              el.setAttribute(a, el.getAttribute('data-en-' + a));
+            });
+          });
+          root.querySelectorAll('template').forEach(function (t) {
+            apply(t.content);
+          });
+        }
+        apply(document);
+        var title = document.querySelector('title[data-en]');
+        if (title) document.title = title.getAttribute('data-en');
+        doc.classList.add('i18n-done');
+      })();
+    </script>
+    <script>
+      import { setLang, type Lang } from '../lib/i18n';
+      const select = document.querySelector<HTMLSelectElement>('[data-lang-select]');
+      select?.addEventListener('change', () => {
+        const next = select.value as Lang;
+        // the poster maker keeps work in memory — don't lose it to a reload by accident
+        if (document.documentElement.dataset.busy && !confirm(next === 'en' ? "You'll need to add your photos again. Switch to English?" : 'ছবিগুলো আবার দিতে হবে। বাংলায় যাবেন?')) {
+          select.value = next === 'en' ? 'bn' : 'en';
+          return;
+        }
+        setLang(next);
+      });
+    </script>
 
   </body>
 </html>
@@ -171,8 +246,39 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 8px;
     min-height: 54px;
+  }
+
+  .lang {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    height: 30px;
+    padding: 0 7px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--kash);
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  /* the real dropdown sits invisibly on top, so phones show their native picker */
+  .lang select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    font-size: 16px; /* no iOS zoom on focus */
+    cursor: pointer;
+  }
+
+  .lang:focus-within {
+    outline: 3px solid var(--haldi);
+    outline-offset: 2px;
   }
 
   .topbar__logo {
@@ -185,13 +291,14 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
 
   nav ul {
     display: flex;
-    gap: clamp(10px, 3vw, 26px);
+    gap: clamp(8px, 2.6vw, 26px);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   nav a {
+    white-space: nowrap;
     font-weight: 600;
     text-decoration: none;
     font-size: 0.95rem;
@@ -262,7 +369,8 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
 
   .footer__made a {
     color: var(--sindoor);
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .footer__links {
@@ -296,8 +404,9 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
     color: var(--ink-soft);
   }
 
-  @media (max-width: 400px) {
-    .nav__wide {
+  /* narrow phones in English: the longer labels don't all fit, and Pujas is on the home page anyway */
+  @media (max-width: 420px) {
+    :global(html[lang='en']) .nav__wide {
       display: none;
     }
   }

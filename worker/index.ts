@@ -1,6 +1,6 @@
 // Parar Pujo Worker: serves the static site (via the ASSETS binding) plus a small API
 // for stories, community pujas, the crowd meter, approvals and the Telegram bot.
-import { queue, review } from './admin';
+import { archive, queue, review } from './admin';
 import { CROWD_WINDOW, getCrowd, voteCrowd } from './crowd';
 import { approver, fail } from './http';
 import { createPuja, listPujas } from './pujas';
@@ -45,6 +45,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
     const name = await approver(request, env);
     if (!name) return fail(401, 'unauthorized', 'চাবি ভুল।');
     if (pathname === '/api/admin/queue' && method === 'GET') return queue(env, name);
+    if (pathname === '/api/admin/archive' && method === 'GET') return archive(request, env);
     if (pathname === '/api/admin/telegram/setup' && method === 'POST') return setupTelegram(request, env);
     if ((m = pathname.match(new RegExp(`^/api/admin/(stories|pujas)/${ID}$`))) && method === 'POST') {
       return review(request, env, name, m[1] as 'stories' | 'pujas', m[2]);
@@ -75,17 +76,16 @@ async function deleteRows(env: Env, table: 'stories' | 'puja_submissions', rows:
   await env.DB.batch(statements);
 }
 
-/** Hourly: remove expired / stale stories and submissions with their photos, and old meter readings. */
+/** Hourly: clear rejected stories, stale puja submissions with their photos, and old meter readings. */
 async function sweep(env: Env) {
   const now = Date.now();
+  // Stories are never deleted on a timer: after 24h they leave the site but stay in the
+  // admin archive, and unreviewed ones wait in the queue. Only rejected rows go (their photo
+  // was deleted at rejection; the row is kept a day so rate limits still count it).
   const stories = await env.DB.prepare(
-    `SELECT id, media_key FROM stories
-      WHERE (status IN ('live', 'hidden') AND expires_at < ?1)
-         OR (status = 'pending' AND created_at < ?2)
-         OR (status = 'rejected' AND reviewed_at < ?2)
-      LIMIT 500`,
+    `SELECT id, media_key FROM stories WHERE status = 'rejected' AND reviewed_at < ?1 LIMIT 500`,
   )
-    .bind(now, now - DAY)
+    .bind(now - DAY)
     .all<{ id: string; media_key: string }>();
   await deleteRows(env, 'stories', stories.results);
 

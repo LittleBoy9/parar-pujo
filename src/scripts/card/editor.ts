@@ -7,6 +7,7 @@ import { STICKERS } from './stickers';
 import { drawBoxSelection, drawLayers, drawSelection, hitTest, newId, type Layer, type StickerLayer, type TextEffect, type TextLayer } from './layers';
 import { FILTERS, applyFilter, loadUserPhoto, slotPlaceholder, type Filter } from './photos';
 import { pujaToday } from './greeting';
+import { num, tr } from '../../lib/i18n';
 
 export interface Puja {
   slug: string;
@@ -162,7 +163,7 @@ export function initEditor(cfg: EditorConfig) {
   async function defaultImage(i: number): Promise<Img> {
     const pal = palette();
     if (i > 0) {
-      const label = template.slots?.[i] ?? `ছবি ${i + 1}`;
+      const label = tr(template.slots?.[i] ?? `ছবি ${i + 1}`, template.slotsEn?.[i] ?? `Photo ${i + 1}`);
       return cached(`ph:${label}:${paletteName()}`, () => slotPlaceholder(label, pal.soft, pal.deep));
     }
     const puja = currentPuja();
@@ -236,6 +237,9 @@ export function initEditor(cfg: EditorConfig) {
     const selText = textRects.find((t) => t.key === selectedText && t.w > 0);
     if (selText) drawBoxSelection(ctx, selText.x, selText.y, selText.w, selText.h);
     paintTextList();
+    // photos aren't saved (text and stickers are), so the language switch asks before reloading
+    if (userPhotos.some(Boolean)) document.documentElement.dataset.busy = '1';
+    else delete document.documentElement.dataset.busy;
     if (thumbs) {
       clearTimeout(thumbTimer);
       thumbTimer = window.setTimeout(() => drawThumbs(d, h), 220);
@@ -251,7 +255,7 @@ export function initEditor(cfg: EditorConfig) {
     b.setAttribute('role', 'radio');
     const c = document.createElement('canvas');
     const label = document.createElement('span');
-    label.textContent = t.bn + (t.slots && t.slots.length > 1 ? ` · ${t.slots.length}টা ছবি` : '');
+    label.textContent = tr(t.bn, t.en) + (t.slots && t.slots.length > 1 ? tr(` · ${t.slots.length}টা ছবি`, ` · ${num(t.slots.length)} photos`) : '');
     b.append(c, label);
     b.addEventListener('click', () => {
       template = t;
@@ -275,7 +279,7 @@ export function initEditor(cfg: EditorConfig) {
   const slotsBox = $('[data-slots]');
   const slotInputs: HTMLInputElement[] = [];
   function buildSlots() {
-    const labels = template.slots ?? ['প্রধান ছবি'];
+    const labels = template.slots?.map((l, i) => tr(l, template.slotsEn?.[i] ?? l)) ?? [tr('প্রধান ছবি', 'Main photo')];
     slotsBox.replaceChildren(...labels.map((label, i) => slotUi(label, i)));
   }
 
@@ -290,7 +294,7 @@ export function initEditor(cfg: EditorConfig) {
 
     const pickers = document.createElement('div');
     pickers.className = 'slot__pickers';
-    for (const [text, selfie] of [['🤳 সেলফি', true], ['🖼️ গ্যালারি', false]] as const) {
+    for (const [text, selfie] of [[tr('🤳 সেলফি', '🤳 Selfie'), true], [tr('🖼️ গ্যালারি', '🖼️ Gallery'), false]] as const) {
       const l = document.createElement('label');
       l.className = `pickbtn${selfie ? ' pickbtn--selfie' : ''}`;
       const input = document.createElement('input');
@@ -308,7 +312,7 @@ export function initEditor(cfg: EditorConfig) {
           buildSlots();
           requestRender(true);
         } catch {
-          alert('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।');
+          alert(tr('এই ছবিটা খোলা যাচ্ছে না — অন্য ছবি দিন।', "Couldn't open this photo — please try another one."));
         }
       });
       l.append(input, document.createTextNode(text));
@@ -327,7 +331,7 @@ export function initEditor(cfg: EditorConfig) {
       zoom.max = '3';
       zoom.step = '0.01';
       zoom.value = String(adjust[i].zoom);
-      zoom.setAttribute('aria-label', 'জুম');
+      zoom.setAttribute('aria-label', tr('জুম', 'Zoom'));
       zoom.addEventListener('input', () => {
         adjust[i].zoom = Number(zoom.value);
         requestRender();
@@ -340,7 +344,7 @@ export function initEditor(cfg: EditorConfig) {
       const flip = document.createElement('button');
       flip.type = 'button';
       flip.className = 'mini';
-      flip.textContent = '↔ উল্টে দিন';
+      flip.textContent = tr('↔ উল্টে দিন', '↔ Flip');
       flip.addEventListener('click', () => {
         adjust[i].flip = !adjust[i].flip;
         requestRender(true);
@@ -348,7 +352,7 @@ export function initEditor(cfg: EditorConfig) {
       const reset = document.createElement('button');
       reset.type = 'button';
       reset.className = 'mini';
-      reset.textContent = '⟲ আগের মতো';
+      reset.textContent = tr('⟲ আগের মতো', '⟲ Reset');
       reset.addEventListener('click', () => {
         adjust[i] = { ...freshAdjust(), flip: adjust[i].flip };
         zoom.value = '1';
@@ -365,7 +369,7 @@ export function initEditor(cfg: EditorConfig) {
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'mini';
-        b.textContent = f.bn;
+        b.textContent = tr(f.bn, f.en);
         b.setAttribute('aria-pressed', String(has.filter === f.id));
         b.addEventListener('click', () => {
           has.filter = f.id;
@@ -378,7 +382,7 @@ export function initEditor(cfg: EditorConfig) {
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.className = 'mini mini--danger';
-      remove.textContent = '✕ সরান';
+      remove.textContent = tr('✕ সরান', '✕ Remove');
       remove.addEventListener('click', () => {
         userPhotos[i] = null;
         adjust[i] = freshAdjust();
@@ -547,7 +551,7 @@ export function initEditor(cfg: EditorConfig) {
     b.addEventListener('click', () => addText(b.dataset.phrase!, { font: b.dataset.pfont ?? 'galada', color: b.dataset.pcolor ?? '#fffaf0', effect: (b.dataset.peffect as TextEffect) ?? 'outline' })),
   );
   $('[data-add-text]').addEventListener('click', () => {
-    addText('এখানে লিখুন');
+    addText(tr('এখানে লিখুন', 'Write here'));
     tText.focus();
     tText.select();
   });
@@ -583,7 +587,7 @@ export function initEditor(cfg: EditorConfig) {
     b.style.fontFamily = `"${f.family}", var(--font-ui)`;
     b.style.fontWeight = String(f.weight);
     b.innerHTML = `<span>পুজো</span><small></small>`;
-    b.querySelector('small')!.textContent = f.bn;
+    b.querySelector('small')!.textContent = tr(f.bn, f.en);
     b.addEventListener('click', async () => {
       await ensureFont(f);
       if (selectedText) styleDesignText(selectedText, { family: f.family, weight: f.weight });
@@ -612,7 +616,7 @@ export function initEditor(cfg: EditorConfig) {
     ctx.scale(1.05, 1.05);
     s.draw(ctx);
     const label = document.createElement('span');
-    label.textContent = s.bn;
+    label.textContent = tr(s.bn, s.en);
     b.append(c, label);
     b.addEventListener('click', () => {
       const l: StickerLayer = { kind: 'sticker', id: newId(), sticker: s.id, size: 220, fx: 0.5 + (Math.random() - 0.5) * 0.3, fy: 0.5 + (Math.random() - 0.5) * 0.3, rot: 0 };
@@ -844,11 +848,11 @@ export function initEditor(cfg: EditorConfig) {
   const countPoster = () => void fetch('/api/poster', { method: 'POST', keepalive: true }).catch(() => {});
   $('[data-share]').addEventListener('click', async () => {
     countPoster();
-    void shareOrDownload(await exportCanvas(), filename(), 'পাড়ার পুজো', 'share');
+    void shareOrDownload(await exportCanvas(), filename(), tr('পাড়ার পুজো', 'Parar Pujo'), 'share');
   });
   $('[data-save]').addEventListener('click', async () => {
     countPoster();
-    void shareOrDownload(await exportCanvas(), filename(), 'পাড়ার পুজো', 'save');
+    void shareOrDownload(await exportCanvas(), filename(), tr('পাড়ার পুজো', 'Parar Pujo'), 'save');
   });
 
   window.addEventListener('resize', () => requestRender());

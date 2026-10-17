@@ -8,12 +8,12 @@ const { slug } = Astro.props;
 ---
 
 <button class="visit btn" type="button" data-visit={slug} aria-pressed="false">
-  <span class="visit__off">✓ দেখে এলাম</span>
-  <span class="visit__on">দেখা হয়ে গেছে!</span>
+  <span class="visit__off" data-en="✓ Been here">✓ দেখে এলাম</span>
+  <span class="visit__on" data-en="Seen it!">দেখা হয়ে গেছে!</span>
   <svg class="visit__stamp" viewBox="0 0 60 60" aria-hidden="true">
     <circle cx="30" cy="30" r="26" fill="none" stroke="currentColor" stroke-width="3" />
     <circle cx="30" cy="30" r="20" fill="none" stroke="currentColor" stroke-width="1.5" />
-    <text x="30" y="36" text-anchor="middle" font-size="16" font-family="Galada, serif" fill="currentColor">দেখা</text>
+    <text x="30" y="36" text-anchor="middle" font-size="16" font-family="Galada, serif" fill="currentColor" data-en="Seen">দেখা</text>
   </svg>
 </button>
 

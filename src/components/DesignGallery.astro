@@ -18,8 +18,8 @@ const cfg = { samples, tithis, yearBn: site.yearBn };
 
 <section class="gallery" aria-labelledby="gallery-title">
   <div class="wrap gallery__head">
-    <h2 id="gallery-title" class="gallery__title">১৫টা ডিজাইন, বেছে নিন</h2>
-    <a class="gallery__all" href="/card">সব দেখুন →</a>
+    <h2 id="gallery-title" class="gallery__title" data-en="15 designs — pick one">১৫টা ডিজাইন, বেছে নিন</h2>
+    <a class="gallery__all" href="/card" data-en="See all →">সব দেখুন →</a>
   </div>
   <div class="gallery__row" data-gallery={JSON.stringify(cfg)}></div>
 </section>
@@ -28,6 +28,7 @@ const cfg = { samples, tithis, yearBn: site.yearBn };
   import { loadFonts, loadImage, photoInput, type CardPalette, type Img } from '../scripts/card/kit';
   import { TEMPLATES, drawCard } from '../scripts/card/templates';
   import { pujaToday } from '../scripts/card/greeting';
+  import { tr } from '../lib/i18n';
 
   interface Sample {
     nameBn: string;
@@ -48,7 +49,7 @@ const cfg = { samples, tithis, yearBn: site.yearBn };
       c.width = 216;
       c.height = 384;
       const label = document.createElement('span');
-      label.textContent = t.bn;
+      label.textContent = tr(t.bn, t.en);
       a.append(c, label);
       row.append(a);
       return { t, c };

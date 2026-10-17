@@ -96,8 +96,10 @@ export interface CardData {
 export interface Template {
   id: string;
   bn: string;
+  en: string;
   /** Labels for the photo slots this design uses (default: one main photo). */
   slots?: string[];
+  slotsEn?: string[];
   draw(ctx: CanvasRenderingContext2D, H: number, d: CardData): void;
 }
 

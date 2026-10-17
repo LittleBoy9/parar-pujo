@@ -47,17 +47,19 @@ const eventLd = {
   },
 };
 const shareText = `${pandal.nameBn} — পাড়ার পুজো ${pandal.themeBn ? `· থিম: ${pandal.themeBn}` : ''}`;
+const shareTextEn = `${pandal.nameEn} — Parar Pujo ${pandal.themeEn ? `· Theme: ${pandal.themeEn}` : ''}`;
 ---
 
 <Layout
   title={`${pandal.nameBn} · ${pandal.areaBn}`}
+  titleEn={`${pandal.nameEn} · ${pandal.areaEn}`}
   description={`${pandal.nameBn}, ${pandal.areaBn} — দুর্গাপুজো ${site.yearBn}। ছবি, ম্যাপ, ভিড় কেমন, আর নিজের পোস্টার।${pandal.themeBn ? ` থিম: ${pandal.themeBn}।` : ''} ${pandal.nameEn} Durga Puja ${site.yearEn}.`}
   og={`pandal-${pandal.slug}`}
   ogAlt={`${pandal.nameBn} — ${pandal.areaBn}, দুর্গাপুজো`}
   jsonLd={eventLd}
 >
   <article class="pandal wrap" style={`--soft:${p.soft};--bg:${p.bg};--deep:${p.deep}`}>
-    <a class="pandal__back" href={`/para#${pandal.slug}`}>← পাড়ার সব ঠাকুর</a>
+    <a class="pandal__back" href={`/para#${pandal.slug}`} data-en="← All pandals in the para">← পাড়ার সব ঠাকুর</a>
 
     <div class="pandal__grid">
       <div class="pandal__frame">
@@ -65,17 +67,17 @@ const shareText = `${pandal.nameBn} — পাড়ার পুজো ${pandal
       </div>
 
       <div class="pandal__info">
-        <p class="pandal__num">রুটে {toBnDigits(index + 1)} নম্বর</p>
-        {pandal.sample && <p class="pandal__sample">নমুনা — আসল তথ্য আসছে · sample entry</p>}
-        <h1 class="pandal__name">{pandal.nameBn}</h1>
-        <p class="pandal__area">📍 {pandal.areaBn}</p>
+        <p class="pandal__num" data-en={`Stop no. ${index + 1} on the route`}>রুটে {toBnDigits(index + 1)} নম্বর</p>
+        {pandal.sample && <p class="pandal__sample" data-en="Sample entry — real details coming soon">নমুনা — আসল তথ্য আসছে · sample entry</p>}
+        <h1 class="pandal__name" data-en={pandal.nameEn}>{pandal.nameBn}</h1>
+        <p class="pandal__area" data-en={`📍 ${pandal.areaEn}${pandal.since ? ` · since ${pandal.since}` : ''}`}>📍 {pandal.areaBn}</p>
         <p class="en">{pandal.nameEn}{pandal.since && ` · since ${pandal.since}`}</p>
 
         {
           pandal.themeBn && (
             <div class="pandal__theme">
-              <span>এবারের থিম</span>
-              <strong>{pandal.themeBn}</strong>
+              <span data-en="This year's theme">এবারের থিম</span>
+              <strong data-en={pandal.themeEn}>{pandal.themeBn}</strong>
               {pandal.themeEn && <em class="en">{pandal.themeEn}</em>}
             </div>
           )
@@ -86,11 +88,11 @@ const shareText = `${pandal.nameBn} — পাড়ার পুজো ${pandal
         {
           pandal.timings && pandal.timings.length > 0 && (
             <table class="pandal__timings">
-              <caption>সময়সূচি · Timings</caption>
+              <caption data-en="Timings">সময়সূচি · Timings</caption>
               <tbody>
                 {pandal.timings.map((t) => (
                   <tr>
-                    <th scope="row">
+                    <th scope="row" data-en={t.en}>
                       {t.bn} <span class="en">{t.en}</span>
                     </th>
                     <td>{t.time}</td>
@@ -103,16 +105,16 @@ const shareText = `${pandal.nameBn} — পাড়ার পুজো ${pandal
 
         <div class="pandal__actions">
           <VisitButton slug={pandal.slug} />
-          <a class="btn btn--red" href={`/card?pandal=${pandal.slug}`}>পোস্টার বানান</a>
+          <a class="btn btn--red" href={`/card?pandal=${pandal.slug}`} data-en="Make a poster">পোস্টার বানান</a>
           {
             pandal.mapUrl && (
-              <a class="btn btn--yellow" href={pandal.mapUrl} target="_blank" rel="noopener">
+              <a class="btn btn--yellow" href={pandal.mapUrl} target="_blank" rel="noopener" data-en="📍 How do I get there?">
                 📍 যাব কীভাবে?
               </a>
             )
           }
         </div>
-        <ShareButtons text={shareText} />
+        <ShareButtons text={shareText} textEn={shareTextEn} />
         <CrowdMeter slug={pandal.slug} />
       </div>
     </div>
@@ -123,12 +125,12 @@ const shareText = `${pandal.nameBn} — পাড়ার পুজো ${pandal
 
     {
       extraPhotos.length > 0 && (
-        <section class="pandal__gallery" aria-label="আরও ছবি">
-          <h2 class="section-title">আরও ছবি</h2>
+        <section class="pandal__gallery" aria-label="আরও ছবি" data-en-aria-label="More photos">
+          <h2 class="section-title" data-en="More photos">আরও ছবি</h2>
           <div class="pandal__photos">
             {extraPhotos.map((src, i) => (
               <figure class="polaroid" style={`--r:${[-3, 2, -1.5, 3, -2][i % 5]}deg`}>
-                <img src={src} alt={`${pandal.nameBn} — ছবি ${toBnDigits(i + 2)}`} loading="lazy" />
+                <img src={src} alt={`${pandal.nameBn} — ছবি ${toBnDigits(i + 2)}`} data-en-alt={`${pandal.nameEn} — photo ${i + 2}`} loading="lazy" />
               </figure>
             ))}
           </div>
@@ -136,9 +138,9 @@ const shareText = `${pandal.nameBn} — পাড়ার পুজো ${pandal
       )
     }
 
-    <nav class="pandal__route" aria-label="রুট">
-      {prev ? <a href={`/pandal/${prev.slug}`}>← {prev.nameBn}</a> : <span />}
-      {next ? <a href={`/pandal/${next.slug}`}>পরের ঠাকুর: {next.nameBn} →</a> : <a href="/passport">পাসপোর্ট দেখি →</a>}
+    <nav class="pandal__route" aria-label="রুট" data-en-aria-label="Route">
+      {prev ? <a href={`/pandal/${prev.slug}`} data-en={`← ${prev.nameEn}`}>← {prev.nameBn}</a> : <span />}
+      {next ? <a href={`/pandal/${next.slug}`} data-en={`Next pandal: ${next.nameEn} →`}>পরের ঠাকুর: {next.nameBn} →</a> : <a href="/passport" data-en="See my passport →">পাসপোর্ট দেখি →</a>}
     </nav>
   </article>
 </Layout>

@@ -11,7 +11,7 @@ const { href = '/#creator' } = Astro.props;
 
 <a class="chip-by" href={href}>
   <img src={creator.photoSm} alt="" width="120" height="120" />
-  <span>বানিয়েছেন <b>{creator.nameBn}</b></span>
+  <span data-en={`Made by <b>${creator.nameEn}</b>`}>বানিয়েছেন <b>{creator.nameBn}</b></span>
 </a>
 
 <style>

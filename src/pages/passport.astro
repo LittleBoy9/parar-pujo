@@ -5,12 +5,13 @@ import { palettes } from '../data/palettes';
 import { tithis } from '../data/site';
 import { toBnDigits } from '../lib/bangla';
 
-const stamps = pandals.map((p, i) => ({ slug: p.slug, nameBn: p.nameBn, color: palettes[p.palette].bg, num: toBnDigits(i + 1) }));
+const stamps = pandals.map((p, i) => ({ slug: p.slug, nameBn: p.nameBn, nameEn: p.nameEn, color: palettes[p.palette].bg, num: toBnDigits(i + 1) }));
 const total = pandals.length;
 ---
 
 <Layout
   title="ঠাকুর দেখা পাসপোর্ট"
+  titleEn="Pandal-hopping Passport"
   description="কটা ঠাকুর দেখলেন? প্রতিটা প্যান্ডেলে ছাপ মারুন, পাসপোর্ট শেয়ার করুন। Your Durga Puja pandal-hopping passport."
   og="passport"
   ogAlt="ঠাকুর দেখা পাসপোর্ট — পাড়ার পুজো"
@@ -18,12 +19,12 @@ const total = pandals.length;
   <section class="passport wrap">
     <div class="book">
       <header class="book__head">
-        <p class="book__kicker">পাড়ার পুজো · ঠাকুর দেখা</p>
-        <h1 class="book__title">পাসপোর্ট</h1>
+        <p class="book__kicker" data-en="Parar Pujo · Pandal hopping">পাড়ার পুজো · ঠাকুর দেখা</p>
+        <h1 class="book__title" data-en="Passport">পাসপোর্ট</h1>
         <p class="book__count">
-          <span data-count>০</span>/{toBnDigits(total)} ঠাকুর দেখা হল
+          <span data-count data-en="0">০</span><span data-en={`/${total} pandals seen`}>/{toBnDigits(total)} ঠাকুর দেখা হল</span>
         </p>
-        <p class="book__rank" data-rank>এখনও বেরোননি? জামা পরে ফেলুন!</p>
+        <p class="book__rank" data-rank data-en="Not out yet? Get dressed and go!">এখনও বেরোননি? জামা পরে ফেলুন!</p>
       </header>
 
       <ol class="stamps">
@@ -31,9 +32,9 @@ const total = pandals.length;
           stamps.map((s, i) => (
             <li class="slot" data-slot={s.slug} style={`--c:${s.color};--r:${[-12, 8, -4, 14, -9, 5, -15][i % 7]}deg`}>
               <a href={`/pandal/${s.slug}`} class="slot__link">
-                <span class="slot__num">{s.num}</span>
+                <span class="slot__num" data-en={String(i + 1)}>{s.num}</span>
                 <span class="slot__ink" aria-hidden="true">
-                  <span class="slot__name">{s.nameBn}</span>
+                  <span class="slot__name" data-en={s.nameEn}>{s.nameBn}</span>
                   <span class="slot__day" data-day />
                 </span>
                 <span class="visually-hidden" data-sr />
@@ -45,11 +46,11 @@ const total = pandals.length;
 
       <div class="book__actions">
         <button class="btn btn--red" type="button" data-passport-share>
-          পাসপোর্ট শেয়ার করুন
+          <span data-en="Share my passport">পাসপোর্ট শেয়ার করুন</span>
         </button>
-        <a class="btn" href="/para">আরও ঠাকুর দেখি</a>
+        <a class="btn" href="/para" data-en="See more pandals">আরও ঠাকুর দেখি</a>
       </div>
-      <p class="book__note">এই পাসপোর্ট শুধু আপনার ফোনেই থাকে। · Saved only on this phone.</p>
+      <p class="book__note" data-en="Your passport is saved only on this phone.">এই পাসপোর্ট শুধু আপনার ফোনেই থাকে। · Saved only on this phone.</p>
     </div>
   </section>
   <canvas hidden data-passport-canvas></canvas>
@@ -64,9 +65,10 @@ const total = pandals.length;
   import { loadFonts, shareOrDownload } from '../scripts/card/kit';
   import { drawPassport } from '../scripts/card/passport';
   import { toBnDigits } from '../lib/bangla';
+  import { enDate, num, tr } from '../lib/i18n';
 
   const { stamps, tithis, total } = (window as unknown as {
-    __PASSPORT__: { stamps: { slug: string; nameBn: string; color: string }[]; tithis: { dates: string[]; bn: string }[]; total: number };
+    __PASSPORT__: { stamps: { slug: string; nameBn: string; color: string }[]; tithis: { dates: string[]; bn: string; en: string }[]; total: number };
   }).__PASSPORT__;
 
   const visits = getVisits();
@@ -74,7 +76,9 @@ const total = pandals.length;
 
   const dayLabel = (iso: string) => {
     const d = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date(iso));
-    return tithis.find((t) => t.dates.includes(d))?.bn ?? d.split('-').reverse().slice(0, 2).map(toBnDigits).join('/');
+    const t = tithis.find((x) => x.dates.includes(d));
+    if (t) return tr(t.bn, t.en);
+    return tr(d.split('-').reverse().slice(0, 2).map(toBnDigits).join('/'), enDate(d));
   };
 
   document.querySelectorAll<HTMLElement>('[data-slot]').forEach((slot) => {
@@ -83,26 +87,27 @@ const total = pandals.length;
     if (when) {
       slot.classList.add('is-seen');
       slot.querySelector('[data-day]')!.textContent = dayLabel(when);
-      sr.textContent = 'দেখা হয়েছে';
+      sr.textContent = tr('দেখা হয়েছে', 'seen');
     } else {
-      sr.textContent = 'এখনও দেখা হয়নি';
+      sr.textContent = tr('এখনও দেখা হয়নি', 'not seen yet');
     }
   });
 
   const ratio = seen.length / total;
-  const rank =
+  // [Bengali, English] — the shared image stays Bengali
+  const [rank, rankEn] =
     seen.length === 0
-      ? 'এখনও বেরোননি? জামা পরে ফেলুন!'
+      ? ['এখনও বেরোননি? জামা পরে ফেলুন!', 'Not out yet? Get dressed and go!']
       : seen.length === total
-        ? 'পুরো পাড়া কভার! 🏆'
+        ? ['পুরো পাড়া কভার! 🏆', 'Whole para covered! 🏆']
         : ratio >= 0.7
-          ? 'পাক্কা ঠাকুর-দেখিয়ে!'
+          ? ['পাক্কা ঠাকুর-দেখিয়ে!', 'A true pandal-hopper!']
           : ratio >= 0.35
-            ? 'ঠাকুর দেখা জমে উঠেছে'
-            : 'সবে শুরু — পা চালান!';
+            ? ['ঠাকুর দেখা জমে উঠেছে', 'The hopping is heating up']
+            : ['সবে শুরু — পা চালান!', 'Just getting started — keep walking!'];
 
-  document.querySelector('[data-count]')!.textContent = toBnDigits(seen.length);
-  document.querySelector('[data-rank]')!.textContent = rank;
+  document.querySelector('[data-count]')!.textContent = num(seen.length);
+  document.querySelector('[data-rank]')!.textContent = tr(rank, rankEn);
 
   const canvas = document.querySelector<HTMLCanvasElement>('[data-passport-canvas]')!;
   document.querySelector('[data-passport-share]')!.addEventListener('click', async () => {
@@ -114,7 +119,7 @@ const total = pandals.length;
       rank,
       site: location.host,
     });
-    await shareOrDownload(canvas, 'parar-pujo-passport.jpg', 'আমার ঠাকুর দেখা পাসপোর্ট');
+    await shareOrDownload(canvas, 'parar-pujo-passport.jpg', tr('আমার ঠাকুর দেখা পাসপোর্ট', 'My pandal-hopping passport'));
   });
 </script>
 
