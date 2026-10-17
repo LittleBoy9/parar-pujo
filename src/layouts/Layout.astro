@@ -71,8 +71,7 @@ const nav: { href: string; bn: string; en: string; hot?: boolean; wide?: boolean
     <title data-en={fullTitleEn}>{fullTitle}</title>
     <!-- one address for everyone: the old workers.dev link and www hop to the main domain -->
     <script is:inline define:vars={{ home: site.url }}>
-      // workers.dev waits until mobile ISPs' DNS has caught up with the new domain
-      if (/^www\./.test(location.hostname)) location.replace(home + location.pathname + location.search + location.hash);
+      if (/^www\.|\.workers\.dev$/.test(location.hostname)) location.replace(home + location.pathname + location.search + location.hash);
     </script>
     <!-- English visitors: decide before anything paints (see src/lib/i18n.ts) -->
     <script is:inline>

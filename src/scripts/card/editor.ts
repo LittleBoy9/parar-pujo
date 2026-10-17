@@ -8,6 +8,10 @@ import { drawBoxSelection, drawLayers, drawSelection, hitTest, newId, type Layer
 import { FILTERS, applyFilter, loadUserPhoto, slotPlaceholder, type Filter } from './photos';
 import { pujaToday } from './greeting';
 import { num, tr } from '../../lib/i18n';
+import { site } from '../../data/site';
+
+// the address printed on every poster: always the short domain, whichever address the visitor used
+const SITE_HOST = new URL(site.url).host;
 
 export interface Puja {
   slug: string;
@@ -193,7 +197,7 @@ export function initEditor(cfg: EditorConfig) {
       to: String(fd.get('to') || '').trim(),
       photos,
       palette: palette(),
-      site: location.host,
+      site: SITE_HOST,
       yearBn: cfg.yearBn,
       texts,
       textStyles,

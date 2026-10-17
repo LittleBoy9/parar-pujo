@@ -133,6 +133,7 @@ const deleteRuleEn = `After 24 hours your photo leaves the site, but we keep a c
   import { TEMPLATES, drawCard } from '../scripts/card/templates';
   import { pujaToday } from '../scripts/card/greeting';
   import { isEn, tr } from '../lib/i18n';
+  import { site } from '../data/site';
 
   const { storyPandals, tithis, yearBn } = (window as unknown as {
     __STORY__: { storyPandals: { slug: string; nameBn: string; areaBn: string; palette: CardPalette }[]; tithis: { key: string; dates: string[] }[]; yearBn: string };
@@ -207,7 +208,7 @@ const deleteRuleEn = `After 24 hours your photo leaves the site, but we keep a c
       to: '',
       photos: [photoInput(photoImg, 0.5, 0.4)],
       palette: p.palette,
-      site: location.host,
+      site: new URL(site.url).host, // always the short domain on the frame
       yearBn,
     });
   }
