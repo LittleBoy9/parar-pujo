@@ -67,6 +67,18 @@ export const pandals: Pandal[] = [
     photos: ['/pandals/jamuna-sangha/1.jpg'],
     focus: '50% 70%', // the cover crops wide: show the whole pandal, less sky
   },
+  {
+    slug: 'united-club',
+    nameBn: 'ইউনাইটেড ক্লাব',
+    nameEn: 'United Club',
+    areaBn: 'অরবিন্দ রোড',
+    areaEn: 'Aurobindo Road',
+    // TODO: theme, story, map link, founding year — waiting on details
+    frame: 'marquee', // the bulb-lit cinema signboard, third in the row
+    palette: 'neel', // deep blue so the Thakur's gold and purple glow
+    photos: ['/pandals/united-club/1.jpg'],
+    focus: '50% 38%', // a portrait close-up of the Thakur — keep Maa's face in frame
+  },
 ];
 
 export const getPandal = (slug: string) => pandals.find((p) => p.slug === slug);

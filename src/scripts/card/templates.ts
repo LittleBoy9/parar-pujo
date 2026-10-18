@@ -805,10 +805,19 @@ const duo: Template = {
     ctx.arc(cx, cy, r, 0, TAU);
     ctx.stroke();
 
-    credits(ctx, d, cy + r + pick(H, 130, 105, 85), H - 100, { name: p.ink, area: p.accent, ink: p.ink });
-    tag(ctx, H, d, p.ink);
+    // the credits sit on the deep ground: light palettes (haldi, lal paar…) have a dark ink, so use their light bg there
+    const onDeep = isDarkHex(p.ink) ? { name: p.bg, area: '#fffaf0', ink: '#fffaf0' } : { name: p.ink, area: p.accent, ink: p.ink };
+    credits(ctx, d, cy + r + pick(H, 130, 105, 85), H - 100, onDeep);
+    tag(ctx, H, d, onDeep.ink);
   },
 };
+
+/** Rough perceived lightness of a #rrggbb colour (0 dark … 1 light). */
+function isDarkHex(hex: string): boolean {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+}
 
 const parikrama: Template = {
   id: 'parikrama',

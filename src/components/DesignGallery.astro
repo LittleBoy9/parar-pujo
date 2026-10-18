@@ -6,14 +6,14 @@ import { palettes } from '../data/palettes';
 import { site, tithis } from '../data/site';
 
 const withPhotos = pandals.filter((p) => p.photos.length);
-const samples = withPhotos.slice(0, 2).map((p) => ({
+const samples = withPhotos.map((p) => ({
   nameBn: p.nameBn,
   areaBn: p.areaBn,
   photo: p.photos[0],
   fy: p.focus ? parseFloat(p.focus.split(' ')[1]) / 100 : 0.5,
   palette: palettes[p.palette],
 }));
-const cfg = { samples, tithis, yearBn: site.yearBn };
+const cfg = { samples, tithis, yearBn: site.yearBn, host: new URL(site.url).host };
 ---
 
 <section class="gallery" aria-labelledby="gallery-title">
@@ -66,7 +66,7 @@ const cfg = { samples, tithis, yearBn: site.yearBn };
   }
 
   async function draw(row: HTMLElement, links: { t: (typeof TEMPLATES)[number]; c: HTMLCanvasElement }[]) {
-    const cfg = JSON.parse(row.dataset.gallery!) as { samples: Sample[]; tithis: { key: string; dates: string[] }[]; yearBn: string };
+    const cfg = JSON.parse(row.dataset.gallery!) as { samples: Sample[]; tithis: { key: string; dates: string[] }[]; yearBn: string; host: string };
     if (!cfg.samples.length) return;
     await loadFonts();
     const imgs: Img[] = await Promise.all(cfg.samples.map((s) => loadImage(s.photo)));
@@ -75,7 +75,7 @@ const cfg = { samples, tithis, yearBn: site.yearBn };
       const k = i % cfg.samples.length;
       const s = cfg.samples[k];
       const photos = [0, 1, 2, 3].map((j) => photoInput(imgs[(k + j) % imgs.length], 0.5, cfg.samples[(k + j) % imgs.length].fy));
-      drawCard(c, t, 1920, { pujaBn: s.nameBn, areaBn: s.areaBn, greeting, line: '', from: '', to: '', photos, palette: s.palette, site: location.host, yearBn: cfg.yearBn }, 0.2);
+      drawCard(c, t, 1920, { pujaBn: s.nameBn, areaBn: s.areaBn, greeting, line: '', from: '', to: '', photos, palette: s.palette, site: cfg.host, yearBn: cfg.yearBn }, 0.2);
     });
   }
 </script>

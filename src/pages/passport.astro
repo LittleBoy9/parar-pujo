@@ -61,6 +61,7 @@ const total = pandals.length;
 </script>
 
 <script>
+  import { site } from '../data/site';
   import { getVisits } from '../scripts/passport';
   import { loadFonts, shareOrDownload } from '../scripts/card/kit';
   import { drawPassport } from '../scripts/card/passport';
@@ -117,7 +118,7 @@ const total = pandals.length;
       seenCount: seen.length,
       total,
       rank,
-      site: location.host,
+      site: new URL(site.url).host, // always the short domain on the card
     });
     await shareOrDownload(canvas, 'parar-pujo-passport.jpg', tr('আমার ঠাকুর দেখা পাসপোর্ট', 'My pandal-hopping passport'));
   });

@@ -5,7 +5,7 @@ import { palettes } from '../data/palettes';
 import { site, tithis } from '../data/site';
 
 const withPhotos = pandals.filter((p) => p.photos.length);
-const samples = withPhotos.slice(0, 2).map((p) => ({
+const samples = withPhotos.map((p) => ({
   nameBn: p.nameBn,
   areaBn: p.areaBn,
   photo: p.photos[0],
@@ -43,7 +43,7 @@ const features = [
       <a class="btn btn--red showcase__cta" href="/card" data-en="Make my poster →">আমার পোস্টার বানাই →</a>
     </div>
 
-    <div class="showcase__fan" data-showcase={JSON.stringify({ samples, tithis, yearBn: site.yearBn })} aria-hidden="true">
+    <div class="showcase__fan" data-showcase={JSON.stringify({ samples, tithis, yearBn: site.yearBn, host: new URL(site.url).host })} aria-hidden="true">
       <canvas class="fan__card fan__card--1"></canvas>
       <canvas class="fan__card fan__card--2"></canvas>
       <canvas class="fan__card fan__card--3"></canvas>
@@ -78,7 +78,7 @@ const features = [
   }
 
   async function draw(fan: HTMLElement) {
-    const cfg = JSON.parse(fan.dataset.showcase!) as { samples: Sample[]; tithis: { key: string; dates: string[] }[]; yearBn: string };
+    const cfg = JSON.parse(fan.dataset.showcase!) as { samples: Sample[]; tithis: { key: string; dates: string[] }[]; yearBn: string; host: string };
     if (!cfg.samples.length) return;
     await loadFonts();
     const imgs: Img[] = await Promise.all(cfg.samples.map((s) => loadImage(s.photo)));
@@ -86,8 +86,8 @@ const features = [
     const canvases = [...fan.querySelectorAll('canvas')];
     const plan: { template: string; sample: number; layers: Layer[] }[] = [
       { template: 'duo', sample: 0, layers: [{ kind: 'sticker', id: 'a', sticker: 'dhak', size: 230, fx: 0.83, fy: 0.08, rot: 12 }] },
-      { template: 'chokh', sample: 1, layers: [{ kind: 'text', id: 'b', text: 'জয় মা দুর্গা', font: 'galada', color: '#f2b632', size: 90, effect: 'outline', fx: 0.5, fy: 0.93, rot: -4 }] },
-      { template: 'parikrama', sample: 0, layers: [{ kind: 'sticker', id: 'c', sticker: 'shiuli', size: 200, fx: 0.86, fy: 0.9, rot: 0 }] },
+      { template: 'chokh', sample: 2, layers: [{ kind: 'text', id: 'b', text: 'জয় মা দুর্গা', font: 'galada', color: '#f2b632', size: 90, effect: 'outline', fx: 0.5, fy: 0.93, rot: -4 }] },
+      { template: 'parikrama', sample: 1, layers: [{ kind: 'sticker', id: 'c', sticker: 'shiuli', size: 200, fx: 0.86, fy: 0.9, rot: 0 }] },
     ];
     plan.forEach((p, i) => {
       const t = TEMPLATES.find((x) => x.id === p.template)!;
@@ -103,7 +103,7 @@ const features = [
         to: '',
         photos,
         palette: s.palette,
-        site: location.host,
+        site: cfg.host,
         yearBn: cfg.yearBn,
       }, 0.32);
       drawLayers(canvases[i].getContext('2d')!, 1920, p.layers);
